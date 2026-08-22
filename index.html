@@ -1,486 +1,1131 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мама-сборы 😂</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: #ffe8c7;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', cursive, sans-serif;
-            touch-action: pan-y;
-        }
-        #gameWrapper {
-            width: 100%;
-            max-width: 500px;
-            aspect-ratio: 9 / 16;
-            background: #feda7a;
-            border-radius: 48px 48px 32px 32px;
-            box-shadow: 0 20px 0 #b47d44, 0 30px 40px rgba(0,0,0,0.3);
-            position: relative;
-            overflow: hidden;
-            touch-action: none;
-            border: 6px solid #fce1a4;
-        }
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            background: #b3d9f7;
-            touch-action: none;
-            cursor: grab;
-            border-radius: 40px;
-        }
-        #ui {
-            position: absolute;
-            bottom: 16px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            padding: 0 16px;
-            pointer-events: none;
-        }
-        #ui button {
-            pointer-events: auto;
-            background: #ffb347;
-            border: none;
-            border-radius: 60px;
-            padding: 14px 28px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #3d2b1a;
-            box-shadow: 0 8px 0 #b86f1f, 0 10px 20px rgba(0,0,0,0.2);
-            transition: 0.07s ease;
-            touch-action: manipulation;
-            border: 3px solid #ffd58c;
-            letter-spacing: 0.5px;
-            flex: 1;
-            max-width: 200px;
-            font-family: 'Comic Sans MS', cursive;
-        }
-        #ui button:active {
-            transform: translateY(8px);
-            box-shadow: 0 2px 0 #b86f1f;
-        }
-        #messageBox {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            right: 16px;
-            background: rgba(255, 240, 180, 0.95);
-            padding: 14px 16px;
-            border-radius: 60px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #2a1c0a;
-            box-shadow: 0 6px 0 #dba14b, 0 8px 20px rgba(0,0,0,0.1);
-            backdrop-filter: blur(4px);
-            border: 3px solid #fad48b;
-            pointer-events: none;
-            min-height: 3.6rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1.4;
-            font-family: 'Comic Sans MS', cursive;
-        }
-        #messageBox span {
-            background: #ffe28a;
-            padding: 0 14px;
-            border-radius: 40px;
-            margin: 0 6px;
-        }
-        @media (max-width: 480px) {
-            #gameWrapper {
-                border-radius: 28px;
-                max-width: 100vw;
-                aspect-ratio: 9 / 16;
-                border-width: 4px;
-            }
-            #ui button {
-                font-size: 1rem;
-                padding: 12px 16px;
-            }
-            #messageBox {
-                font-size: 1rem;
-                padding: 10px 14px;
-                top: 10px;
-                left: 10px;
-                right: 10px;
-                min-height: 3rem;
-            }
-        }
-        @media (max-height: 700px) {
-            #messageBox {
-                font-size: 0.85rem;
-                padding: 6px 12px;
-                min-height: 2.4rem;
-                top: 8px;
-            }
-            #ui button {
-                padding: 8px 14px;
-                font-size: 0.85rem;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Мама-сборы 🏃‍♀️👶</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+    touch-action: none;
+    overscroll-behavior: none;
+  }
+
+  body {
+    background: linear-gradient(180deg, #FFE5B4 0%, #FFB07C 100%);
+  }
+
+  #game {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .coins-display {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    border: 3px solid #8B4513;
+    border-radius: 30px;
+    padding: 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 0 #8B4513, 0 6px 12px rgba(0,0,0,0.2);
+    pointer-events: auto;
+  }
+
+  .coin-icon {
+    width: 28px;
+    height: 28px;
+    background: radial-gradient(circle at 30% 30%, #FFEB3B, #FFC107, #FF9800);
+    border-radius: 50%;
+    border: 2px solid #8B4513;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: #8B4513;
+    animation: coinSpin 3s linear infinite;
+  }
+
+  @keyframes coinSpin {
+    0%, 100% { transform: scaleX(1); }
+    50% { transform: scaleX(0.3); }
+  }
+
+  .coins-amount {
+    font-size: 22px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 0 #8B4513;
+  }
+
+  .shop-btn {
+    background: linear-gradient(135deg, #9C27B0, #673AB7);
+    border: 3px solid #fff;
+    border-radius: 30px;
+    padding: 10px 18px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 0 #4A148C;
+    box-shadow: 0 4px 0 #4A148C, 0 6px 12px rgba(0,0,0,0.2);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.1s;
+  }
+
+  .shop-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #4A148C;
+  }
+
+  #canvas {
+    flex: 1;
+    width: 100%;
+    display: block;
+    touch-action: none;
+  }
+
+  .hint {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.9);
+    border: 3px solid #FF6B9D;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #FF1493;
+    text-shadow: 1px 1px 0 #fff;
+    z-index: 5;
+    animation: hintBounce 1.5s infinite;
+    pointer-events: none;
+  }
+
+  @keyframes hintBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-8px); }
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 20px;
+  }
+
+  .modal-overlay.show {
+    display: flex;
+  }
+
+  .modal {
+    background: linear-gradient(135deg, #FFF9E6, #FFE5B4);
+    border: 4px solid #8B4513;
+    border-radius: 24px;
+    padding: 20px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+
+  .modal-title {
+    text-align: center;
+    font-size: 28px;
+    color: #8B4513;
+    margin-bottom: 16px;
+    text-shadow: 2px 2px 0 #FFD700;
+  }
+
+  .upgrade-card {
+    background: #fff;
+    border: 3px solid #FFB07C;
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.1s;
+  }
+
+  .upgrade-card:active {
+    transform: scale(0.98);
+  }
+
+  .upgrade-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    border: 2px solid #8B4513;
+    flex-shrink: 0;
+  }
+
+  .upgrade-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .upgrade-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #8B4513;
+    margin-bottom: 2px;
+  }
+
+  .upgrade-desc {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  .upgrade-level {
+    font-size: 11px;
+    color: #FF1493;
+    font-weight: bold;
+  }
+
+  .upgrade-buy {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    border: 2px solid #fff;
+    border-radius: 12px;
+    padding: 8px 12px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 3px 0 #1B5E20;
+    flex-shrink: 0;
+  }
+
+  .upgrade-buy:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #1B5E20;
+  }
+
+  .upgrade-buy:disabled {
+    background: linear-gradient(135deg, #9E9E9E, #616161);
+    box-shadow: 0 3px 0 #424242;
+    cursor: not-allowed;
+  }
+
+  .close-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #FF6B9D, #FF1493);
+    border: 3px solid #fff;
+    border-radius: 16px;
+    padding: 12px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 2px 2px 0 #C2185B;
+    box-shadow: 0 4px 0 #C2185B;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .close-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #C2185B;
+  }
+
+  .floating-coin {
+    position: absolute;
+    font-size: 28px;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 2px 2px 0 #8B4513;
+    pointer-events: none;
+    z-index: 20;
+    animation: floatUp 1.2s ease-out forwards;
+  }
+
+  @keyframes floatUp {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    20% { transform: translateY(-20px) scale(1.4); opacity: 1; }
+    100% { transform: translateY(-120px) scale(1); opacity: 0; }
+  }
+</style>
 </head>
 <body>
-<div id="gameWrapper">
-    <canvas id="gameCanvas" width="360" height="640"></canvas>
-    <div id="messageBox">🏠 Собери все вещи!</div>
-    <div id="ui">
-        <button id="resetBtn">🔄 Заново</button>
+<div id="game">
+  <div class="top-bar">
+    <div class="coins-display">
+      <div class="coin-icon">$</div>
+      <div class="coins-amount" id="coinsAmount">0</div>
     </div>
+    <button class="shop-btn" id="shopBtn">🛍️ Магазин</button>
+  </div>
+  <canvas id="canvas"></canvas>
+  <div class="hint" id="hint">👆 Тапни на маму, чтобы собрать детей!</div>
 </div>
+
+<div class="modal-overlay" id="shopModal">
+  <div class="modal">
+    <div class="modal-title">🛍️ Магазин</div>
+    <div id="upgradesList"></div>
+    <button class="close-btn" id="closeShop">Закрыть</button>
+  </div>
+</div>
+
 <script>
-    (function(){
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const messageEl = document.getElementById('messageBox');
+(function() {
+  'use strict';
 
-        const W = 360, H = 640;
-        canvas.width = W; canvas.height = H;
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const coinsAmountEl = document.getElementById('coinsAmount');
+  const shopBtn = document.getElementById('shopBtn');
+  const shopModal = document.getElementById('shopModal');
+  const closeShop = document.getElementById('closeShop');
+  const upgradesList = document.getElementById('upgradesList');
+  const hintEl = document.getElementById('hint');
 
-        // ----- Персонажи (мультяшные) -----
-        let mom = { x: 160, y: 480, r: 28, color: '#d96c9e' };
+  let W = 0, H = 0;
+  let dpr = window.devicePixelRatio || 1;
 
-        const child1 = { x: 60, y: 140, r: 24, color: '#f5a97f', name: 'Алиса' };
-        const child2 = { x: 280, y: 190, r: 24, color: '#7fc9a2', name: 'Макс' };
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
 
-        // Одежда с разными эмодзи
-        let clothes = [
-            { x: 30, y: 350, r: 18, collected: false, emoji: '🧢' },
-            { x: 310, y: 370, r: 18, collected: false, emoji: '🧣' },
-            { x: 170, y: 300, r: 18, collected: false, emoji: '🧥' },
-            { x: 70, y: 540, r: 18, collected: false, emoji: '👖' },
-            { x: 260, y: 550, r: 18, collected: false, emoji: '👟' },
-            { x: 140, y: 210, r: 18, collected: false, emoji: '🧦' }
-        ];
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 
-        let allCollected = false;
-        let gameFinished = false;
-        let winFlag = false;
-        let child1Ready = false, child2Ready = false;
+  // ========== Игровые объекты ==========
+  const game = {
+    coins: 0,
+    t: 0,
+    momState: 'idle', // idle, running, collect, done
+    runTimer: 0,
+    cooldownTimer: 0,
+    kids: [],
+    particles: [],
+    toys: [],
+    readyToWalk: false,
+    finalMessage: false,
+    autoTimer: 0,
+    hintVisible: true,
+    momX: 0,
+    momY: 0,
+    targetX: 0,
+    targetY: 0,
+    squish: 0
+  };
 
-        // Перетаскивание
-        let isDragging = false;
-        let dragOffsetX = 0, dragOffsetY = 0;
-        let activeClothIndex = -1;
+  // Дети и игрушки
+  const KID_COUNT = 2;
+  const TOY_COUNT = 4;
 
-        // ----- Сброс -----
-        function resetGame() {
-            mom.x = 160; mom.y = 480;
-            // разброс одежды
-            const positions = [
-                [30,350],[310,370],[170,300],[70,540],[260,550],[140,210]
-            ];
-            for (let i = positions.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [positions[i], positions[j]] = [positions[j], positions[i]];
-            }
-            clothes.forEach((c, idx) => {
-                c.x = positions[idx][0];
-                c.y = positions[idx][1];
-                c.collected = false;
-            });
-            allCollected = false;
-            gameFinished = false;
-            winFlag = false;
-            child1Ready = false;
-            child2Ready = false;
-            isDragging = false;
-            activeClothIndex = -1;
-            messageEl.innerHTML = '🧸 Тащи одежду к детям!';
-            // дети на своих местах
-            child1.x = 60; child1.y = 140;
-            child2.x = 280; child2.y = 190;
+  function initGame() {
+    game.kids = [];
+    game.toys = [];
+    game.momState = 'idle';
+    game.runTimer = 0;
+    game.cooldownTimer = 0;
+    game.readyToWalk = false;
+    game.finalMessage = false;
+    game.squish = 0;
+    game.autoTimer = 0;
+
+    const cat = getCatPos();
+    game.momX = cat.x;
+    game.momY = cat.y;
+
+    // Размещаем детей и игрушки
+    const positions = [
+      { x: 0.2, y: 0.3 },
+      { x: 0.75, y: 0.25 },
+      { x: 0.15, y: 0.7 },
+      { x: 0.8, y: 0.65 },
+      { x: 0.45, y: 0.2 },
+      { x: 0.55, y: 0.75 }
+    ];
+
+    for (let i = 0; i < KID_COUNT; i++) {
+      game.kids.push({
+        x: positions[i].x * W,
+        y: positions[i].y * H,
+        collected: false,
+        r: 35,
+        color: i === 0 ? '#FF6B9D' : '#4CAF50',
+        emoji: i === 0 ? '👧' : '👦',
+        name: i === 0 ? 'Аня' : 'Петя'
+      });
+    }
+
+    for (let i = 0; i < TOY_COUNT; i++) {
+      const idx = i + KID_COUNT;
+      game.toys.push({
+        x: positions[idx].x * W,
+        y: positions[idx].y * H,
+        collected: false,
+        r: 22,
+        emoji: ['🧸', '🎒', '🧢', '🧣'][i],
+        color: ['#FF9800', '#9C27B0', '#2196F3', '#FF5722'][i]
+      });
+    }
+  }
+
+  function getCatPos() {
+    const size = Math.min(W, H) * 0.55;
+    return {
+      x: W / 2,
+      y: H * 0.55,
+      size: size
+    };
+  }
+
+  // ========== Отрисовка ==========
+  function drawBackground() {
+    const tileSize = 40;
+    for (let y = 0; y < H; y += tileSize) {
+      for (let x = 0; x < W; x += tileSize) {
+        const isLight = ((x / tileSize) + (y / tileSize)) % 2 === 0;
+        ctx.fillStyle = isLight ? '#FFE5D9' : '#FFD4C0';
+        ctx.fillRect(x, y, tileSize, tileSize);
+        ctx.strokeStyle = '#FFB07C';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, tileSize, tileSize);
+      }
+    }
+
+    // Коврик
+    const cat = getCatPos();
+    const rugW = cat.size * 1.4;
+    const rugH = cat.size * 0.6;
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath();
+    ctx.ellipse(cat.x, cat.y + cat.size * 0.35 + rugH / 2 + 5, rugW / 2, rugH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const rugGrad = ctx.createLinearGradient(0, cat.y + cat.size * 0.35, 0, cat.y + cat.size * 0.35 + rugH);
+    rugGrad.addColorStop(0, '#FF6B9D');
+    rugGrad.addColorStop(1, '#C2185B');
+    ctx.fillStyle = rugGrad;
+    ctx.beginPath();
+    ctx.ellipse(cat.x, cat.y + cat.size * 0.35 + rugH / 2, rugW / 2, rugH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(cat.x, cat.y + cat.size * 0.35 + rugH / 2, rugW / 2 - 10, rugH / 2 - 8, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  function drawMom() {
+    const s = Math.min(W, H) / 180;
+    const cx = game.momX;
+    const cy = game.momY;
+
+    let squish = 0;
+    if (game.squish > 0) squish = game.squish * 6;
+
+    ctx.save();
+    ctx.translate(cx, cy + squish);
+
+    // Тень
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(0, 50 * s, 45 * s, 8 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Платье
+    const dressGrad = ctx.createRadialGradient(-10 * s, 0, 10 * s, 0, 10 * s, 50 * s);
+    dressGrad.addColorStop(0, '#FF6B9D');
+    dressGrad.addColorStop(1, '#D81B60');
+    ctx.fillStyle = dressGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, 20 * s, 38 * s, 35 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Пояс
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(-30 * s, 20 * s, 60 * s, 4 * s);
+
+    // Ноги
+    ctx.fillStyle = '#FFB74D';
+    ctx.beginPath();
+    ctx.ellipse(-18 * s, 48 * s, 8 * s, 10 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(18 * s, 48 * s, 8 * s, 10 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Туфли
+    ctx.fillStyle = '#E91E63';
+    ctx.beginPath();
+    ctx.ellipse(-22 * s, 52 * s, 12 * s, 5 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(22 * s, 52 * s, 12 * s, 5 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Руки
+    ctx.fillStyle = '#FFB74D';
+    ctx.beginPath();
+    ctx.ellipse(-40 * s, 20 * s, 8 * s, 16 * s, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(40 * s, 20 * s, 8 * s, 16 * s, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Голова
+    const headGrad = ctx.createRadialGradient(-5 * s, -30 * s, 5 * s, 0, -25 * s, 35 * s);
+    headGrad.addColorStop(0, '#FFB74D');
+    headGrad.addColorStop(1, '#FF9800');
+    ctx.fillStyle = headGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, -25 * s, 30 * s, 30 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Волосы
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.arc(0, -35 * s, 32 * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#795548';
+    ctx.beginPath();
+    ctx.arc(-20 * s, -30 * s, 12 * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(20 * s, -30 * s, 12 * s, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Бант
+    ctx.fillStyle = '#FF4081';
+    ctx.beginPath();
+    ctx.ellipse(28 * s, -40 * s, 10 * s, 6 * s, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(32 * s, -36 * s, 6 * s, 8 * s, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Глаза
+    const eyeY = -28 * s;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(-12 * s, eyeY, 9 * s, 10 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(12 * s, eyeY, 9 * s, 10 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    let pupilState = 'normal';
+    if (game.momState === 'running') pupilState = 'squint';
+    if (game.momState === 'done') pupilState = 'happy';
+
+    ctx.fillStyle = '#2E7D32';
+    if (pupilState === 'normal') {
+      ctx.beginPath();
+      ctx.ellipse(-12 * s, eyeY, 5 * s, 7 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(12 * s, eyeY, 5 * s, 7 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(-12 * s, eyeY, 2.5 * s, 6 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(12 * s, eyeY, 2.5 * s, 6 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(-10 * s, eyeY - 3 * s, 2 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(14 * s, eyeY - 3 * s, 2 * s, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pupilState === 'squint') {
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(-17 * s, eyeY);
+      ctx.lineTo(-7 * s, eyeY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(7 * s, eyeY);
+      ctx.lineTo(17 * s, eyeY);
+      ctx.stroke();
+    } else if (pupilState === 'happy') {
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2.5 * s;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(-12 * s, eyeY + 2 * s, 6 * s, Math.PI, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(12 * s, eyeY + 2 * s, 6 * s, Math.PI, 0);
+      ctx.stroke();
+    }
+
+    // Рот
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1.5 * s;
+    ctx.lineCap = 'round';
+    if (game.momState === 'running') {
+      ctx.fillStyle = '#C2185B';
+      ctx.beginPath();
+      ctx.ellipse(0, -8 * s, 6 * s, 5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (game.momState === 'done' || game.readyToWalk) {
+      ctx.beginPath();
+      ctx.arc(0, -8 * s, 6 * s, 0, Math.PI);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(-5 * s, -8 * s, 4 * s, 0, Math.PI);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(5 * s, -8 * s, 4 * s, 0, Math.PI);
+      ctx.stroke();
+    }
+
+    // Щёчки
+    ctx.fillStyle = 'rgba(255, 105, 180, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(-20 * s, -15 * s, 5 * s, 3 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(20 * s, -15 * s, 5 * s, 3 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // Если мама бежит, рисуем следы
+    if (game.momState === 'running') {
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      for (let i = 0; i < 3; i++) {
+        const px = game.momX - 30 * s + i * 20 * s;
+        const py = game.momY + 50 * s + Math.sin(game.t * 0.3 + i) * 5 * s;
+        ctx.beginPath();
+        ctx.ellipse(px, py, 6 * s, 3 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function drawKids() {
+    game.kids.forEach(kid => {
+      if (kid.collected) return;
+      ctx.save();
+      ctx.translate(kid.x, kid.y);
+
+      // Тень
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.beginPath();
+      ctx.ellipse(0, 30 * (kid.r/35), 25 * (kid.r/35), 6 * (kid.r/35), 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Тело
+      ctx.fillStyle = kid.color;
+      ctx.beginPath();
+      ctx.arc(0, 0, kid.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Эмодзи
+      ctx.font = `${kid.r * 1.4}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(kid.emoji, 0, 2);
+
+      // Имя
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${kid.r * 0.5}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(kid.name, 0, kid.r + 4);
+
+      // Блик
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.beginPath();
+      ctx.arc(-kid.r * 0.3, -kid.r * 0.3, kid.r * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    });
+  }
+
+  function drawToys() {
+    game.toys.forEach(toy => {
+      if (toy.collected) return;
+      ctx.save();
+      ctx.translate(toy.x, toy.y);
+
+      // Тень
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.beginPath();
+      ctx.ellipse(0, 18 * (toy.r/22), 18 * (toy.r/22), 5 * (toy.r/22), 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Фон
+      ctx.fillStyle = toy.color;
+      ctx.beginPath();
+      ctx.arc(0, 0, toy.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Эмодзи
+      ctx.font = `${toy.r * 1.3}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(toy.emoji, 0, 2);
+
+      // Блик
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.beginPath();
+      ctx.arc(-toy.r * 0.25, -toy.r * 0.25, toy.r * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    });
+  }
+
+  function drawParticles() {
+    game.particles.forEach(p => {
+      ctx.save();
+      ctx.globalAlpha = p.life / p.maxLife;
+      ctx.fillStyle = p.color;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      if (p.type === 'star') {
+        ctx.fillRect(-p.size/2, -p.size*1.5, p.size, p.size*3);
+        ctx.fillRect(-p.size*1.5, -p.size/2, p.size*3, p.size);
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+  }
+
+  function drawFinalMessage() {
+    if (!game.finalMessage) return;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, H/2 - 80, W, 100);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('👧 "Мама, я хочу писать!" 😂', W/2, H/2 - 20);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '18px sans-serif';
+    ctx.fillText('🔄 Нажми "Магазин" → "Сброс" чтобы начать заново', W/2, H/2 + 35);
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    drawBackground();
+    drawToys();
+    drawKids();
+    drawMom();
+    drawParticles();
+    drawFinalMessage();
+  }
+
+  // ========== Логика ==========
+  function update() {
+    game.t++;
+
+    if (game.squish > 0) {
+      game.squish -= 0.08;
+      if (game.squish < 0) game.squish = 0;
+    }
+
+    // Движение мамы к целям
+    if (game.momState === 'running') {
+      const dx = game.targetX - game.momX;
+      const dy = game.targetY - game.momY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+
+      if (dist > 5) {
+        const speed = 4 + game.runTimer * 0.1;
+        game.momX += (dx / dist) * Math.min(speed, dist);
+        game.momY += (dy / dist) * Math.min(speed, dist);
+        game.runTimer++;
+      } else {
+        // Достигли цели
+        game.momX = game.targetX;
+        game.momY = game.targetY;
+        collectTarget();
+      }
+    }
+
+    if (game.momState === 'cooldown') {
+      game.cooldownTimer--;
+      if (game.cooldownTimer <= 0) {
+        game.momState = 'idle';
+        // Проверяем, все ли собрано
+        const allKids = game.kids.every(k => k.collected);
+        const allToys = game.toys.every(t => t.collected);
+        if (allKids && allToys && !game.readyToWalk) {
+          game.readyToWalk = true;
+          game.momState = 'done';
+          setTimeout(() => {
+            game.finalMessage = true;
+          }, 1000);
         }
+      }
+    }
 
-        function checkAllCollected() {
-            return clothes.every(c => c.collected === true);
-        }
+    // Авто-сбор (апгрейд)
+    if (upgrades[1].level > 0 && game.momState === 'idle' && !game.readyToWalk) {
+      game.autoTimer++;
+      const interval = Math.max(60, 180 - upgrades[1].level * 25);
+      if (game.autoTimer >= interval) {
+        findNextTarget();
+        game.autoTimer = 0;
+      }
+    }
 
-        function updateGameState() {
-            if (gameFinished) return;
+    // Частицы
+    game.particles = game.particles.filter(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.2;
+      p.rot += p.vr;
+      p.life--;
+      return p.life > 0;
+    });
+  }
 
-            const allCollectedNow = checkAllCollected();
-            if (allCollectedNow && !allCollected) {
-                allCollected = true;
-                child1Ready = true;
-                child2Ready = true;
-                messageEl.innerHTML = '🎉 Всё собрано! Мама ведёт гулять...';
-                setTimeout(() => {
-                    if (!gameFinished) {
-                        gameFinished = true;
-                        winFlag = false;
-                        messageEl.innerHTML = '👧 "Мааам, я хочу пиииисать!" 😂';
-                        // дети "убегают" вниз
-                        child1.x = 40; child1.y = 580;
-                        child2.x = 300; child2.y = 580;
-                        mom.x = 160; mom.y = 400;
-                        // добавим смешные лица
-                    }
-                }, 1600);
-            } else if (!allCollectedNow) {
-                allCollected = false;
-                if (!gameFinished) {
-                    const left = clothes.filter(c => !c.collected).length;
-                    messageEl.innerHTML = `🧦 Осталось: ${left} вещей`;
-                }
-            }
-        }
+  function findNextTarget() {
+    // Ищем ближайший несобранный объект
+    const targets = [...game.kids.filter(k => !k.collected), ...game.toys.filter(t => !t.collected)];
+    if (targets.length === 0) return;
 
-        // ----- Рисование -----
-        function draw() {
-            ctx.clearRect(0, 0, W, H);
+    let closest = targets[0];
+    let minDist = Infinity;
+    targets.forEach(t => {
+      const dx = t.x - game.momX;
+      const dy = t.y - game.momY;
+      const dist = dx*dx + dy*dy;
+      if (dist < minDist) {
+        minDist = dist;
+        closest = t;
+      }
+    });
 
-            // Пол с узором
-            ctx.fillStyle = '#d8b48c';
-            ctx.fillRect(0, 480, W, 160);
-            ctx.fillStyle = '#c9a57a';
-            for (let i=0; i<14; i++) {
-                ctx.beginPath();
-                ctx.arc(15 + i*28, 520, 12, 0, Math.PI*2);
-                ctx.fillStyle = (i%2===0) ? '#e3c9a8' : '#b48d62';
-                ctx.fill();
-            }
+    game.targetX = closest.x;
+    game.targetY = closest.y;
+    game.momState = 'running';
+    game.runTimer = 0;
+    game.squish = 0.5;
+  }
 
-            // Стены с обоями
-            ctx.fillStyle = '#fce8c8';
-            ctx.fillRect(0, 0, W, 480);
-            // Рисунок на стене
-            ctx.fillStyle = '#f5dbb1';
-            ctx.fillRect(20, 20, 60, 60);
-            ctx.fillStyle = '#fce8c8';
-            ctx.fillRect(25, 25, 50, 50);
-            ctx.fillStyle = '#f5dbb1';
-            ctx.fillRect(270, 20, 60, 60);
-            ctx.fillStyle = '#fce8c8';
-            ctx.fillRect(275, 25, 50, 50);
-            // Солнышко
-            ctx.fillStyle = '#ffdb7a';
-            ctx.beginPath();
-            ctx.arc(310, 50, 20, 0, Math.PI*2);
-            ctx.fill();
-            ctx.fillStyle = '#f7c54a';
-            for (let i=0; i<8; i++) {
-                let angle = i * Math.PI/4;
-                ctx.beginPath();
-                ctx.arc(310 + Math.cos(angle)*28, 50 + Math.sin(angle)*28, 6, 0, Math.PI*2);
-                ctx.fill();
-            }
+  function collectTarget() {
+    // Проверяем, есть ли кто-то рядом
+    let collected = false;
+    game.kids.forEach(kid => {
+      if (kid.collected) return;
+      const dx = kid.x - game.momX;
+      const dy = kid.y - game.momY;
+      if (dx*dx + dy*dy < 2500) {
+        kid.collected = true;
+        collected = true;
+        const earned = 5 * (upgrades[0].effect());
+        game.coins += earned;
+        spawnFloatingCoin(game.momX, game.momY - 40, earned);
+        spawnParticles(game.momX, game.momY, '#FF6B9D', 12);
+        updateCoinsDisplay();
+      }
+    });
 
-            // Дети
-            drawChild(child1);
-            drawChild(child2);
+    game.toys.forEach(toy => {
+      if (toy.collected) return;
+      const dx = toy.x - game.momX;
+      const dy = toy.y - game.momY;
+      if (dx*dx + dy*dy < 1600) {
+        toy.collected = true;
+        collected = true;
+        const earned = 3 * (upgrades[0].effect());
+        game.coins += earned;
+        spawnFloatingCoin(game.momX, game.momY - 40, earned);
+        spawnParticles(game.momX, game.momY, toy.color, 8);
+        updateCoinsDisplay();
+      }
+    });
 
-            // Одежда
-            clothes.forEach(c => {
-                if (!c.collected) {
-                    ctx.shadowColor = '#4a2e14';
-                    ctx.shadowBlur = 12;
-                    ctx.beginPath();
-                    ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
-                    ctx.fillStyle = '#f7d48a';
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                    ctx.font = '24px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(c.emoji, c.x, c.y-1);
-                    // блеск
-                    ctx.fillStyle = 'rgba(255,255,230,0.3)';
-                    ctx.beginPath();
-                    ctx.arc(c.x-4, c.y-6, 6, 0, Math.PI*2);
-                    ctx.fill();
-                }
-            });
+    if (collected) {
+      game.momState = 'cooldown';
+      game.cooldownTimer = 15;
+      game.squish = 0.8;
+    } else {
+      // Если ничего не собрали, возвращаемся в idle
+      game.momState = 'idle';
+    }
+  }
 
-            // Мама (с лицом)
-            ctx.shadowColor = '#3d2412';
-            ctx.shadowBlur = 16;
-            ctx.beginPath();
-            ctx.arc(mom.x, mom.y, mom.r, 0, Math.PI*2);
-            ctx.fillStyle = mom.color;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.font = '32px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('👩', mom.x-1, mom.y-2);
+  function startCollect() {
+    if (game.momState === 'idle' && !game.readyToWalk) {
+      findNextTarget();
+    }
+  }
 
-            // Если финал шутка
-            if (gameFinished && !winFlag) {
-                ctx.font = '28px sans-serif';
-                ctx.fillStyle = '#2d1a0a';
-                ctx.fillText('😱', mom.x+32, mom.y-30);
-                // облачко
-                ctx.fillStyle = 'rgba(255,255,230,0.85)';
-                ctx.beginPath();
-                ctx.ellipse(mom.x+50, mom.y-50, 40, 25, 0, 0, Math.PI*2);
-                ctx.fill();
-                ctx.fillStyle = '#2d1a0a';
-                ctx.font = '18px sans-serif';
-                ctx.fillText('Ой!', mom.x+50, mom.y-48);
-            }
+  function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 4;
+      game.particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.3,
+        size: 3 + Math.random() * 5,
+        color: color,
+        life: 30 + Math.random() * 20,
+        maxLife: 50,
+        type: Math.random() > 0.5 ? 'star' : 'circle'
+      });
+    }
+  }
 
-            // если победа (но не используется)
-            if (winFlag) {
-                ctx.fillStyle = '#fddf8a';
-                ctx.fillRect(60, 220, 240, 70);
-                ctx.fillStyle = '#3d2b1a';
-                ctx.font = 'bold 24px sans-serif';
-                ctx.fillText('🎈 УРА! 🎈', 180, 258);
-            }
-        }
+  function spawnFloatingCoin(x, y, amount) {
+    const el = document.createElement('div');
+    el.className = 'floating-coin';
+    el.textContent = `+${amount}`;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+  }
 
-        function drawChild(child) {
-            ctx.shadowColor = '#1f1307';
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            ctx.arc(child.x, child.y, child.r, 0, Math.PI*2);
-            ctx.fillStyle = child.color;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.font = '28px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('🧒', child.x-1, child.y-1);
-            ctx.fillStyle = '#1f1509';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText(child.name, child.x, child.y - child.r - 14);
-        }
+  function updateCoinsDisplay() {
+    coinsAmountEl.textContent = formatNumber(game.coins);
+  }
 
-        // ----- Ввод -----
-        function handleStart(e) {
-            e.preventDefault();
-            if (gameFinished) return;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = W / rect.width;
-            const scaleY = H / rect.height;
+  function formatNumber(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return n.toString();
+  }
 
-            let clientX, clientY;
-            if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
+  // ========== Апгрейды ==========
+  const upgrades = [
+    {
+      id: 'multiplier',
+      name: 'Множитель 💰',
+      desc: 'Больше монет за сбор',
+      icon: '💰',
+      level: 0,
+      maxLevel: 10,
+      baseCost: 10,
+      costMult: 1.8,
+      effect: () => 1 + upgrades[0].level
+    },
+    {
+      id: 'auto',
+      name: 'Авто-сбор ⚡',
+      desc: 'Мама сама собирает',
+      icon: '⚡',
+      level: 0,
+      maxLevel: 5,
+      baseCost: 30,
+      costMult: 2.2,
+      effect: () => upgrades[1].level
+    },
+    {
+      id: 'speed',
+      name: 'Скорость 🏃',
+      desc: 'Мама бегает быстрее',
+      icon: '🏃',
+      level: 0,
+      maxLevel: 5,
+      baseCost: 25,
+      costMult: 2.0,
+      effect: () => upgrades[2].level * 0.5
+    }
+  ];
 
-            const canvasX = (clientX - rect.left) * scaleX;
-            const canvasY = (clientY - rect.top) * scaleY;
+  function getCost(upg) {
+    return Math.floor(upg.baseCost * Math.pow(upg.costMult, upg.level));
+  }
 
-            for (let i = 0; i < clothes.length; i++) {
-                const c = clothes[i];
-                if (c.collected) continue;
-                const dx = canvasX - c.x;
-                const dy = canvasY - c.y;
-                if (dx*dx + dy*dy < (c.r+16)*(c.r+16)) {
-                    isDragging = true;
-                    activeClothIndex = i;
-                    dragOffsetX = canvasX - c.x;
-                    dragOffsetY = canvasY - c.y;
-                    break;
-                }
-            }
-        }
+  function renderShop() {
+    upgradesList.innerHTML = '';
+    upgrades.forEach((upg, idx) => {
+      const cost = getCost(upg);
+      const maxed = upg.level >= upg.maxLevel;
+      const canBuy = game.coins >= cost && !maxed;
 
-        function handleMove(e) {
-            e.preventDefault();
-            if (!isDragging || activeClothIndex === -1 || gameFinished) return;
+      const card = document.createElement('div');
+      card.className = 'upgrade-card';
 
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = W / rect.width;
-            const scaleY = H / rect.height;
+      let effectText = '';
+      if (idx === 0) effectText = `Множитель: x${upg.effect()}`;
+      else if (idx === 1) effectText = upg.level === 0 ? 'Выкл' : `Каждые ${((180 - upg.level * 25) / 60).toFixed(1)}с`;
+      else if (idx === 2) effectText = `Скорость: +${(upg.effect() * 2).toFixed(0)}%`;
 
-            let clientX, clientY;
-            if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
+      card.innerHTML = `
+        <div class="upgrade-icon">${upg.icon}</div>
+        <div class="upgrade-info">
+          <div class="upgrade-name">${upg.name}</div>
+          <div class="upgrade-desc">${upg.desc}</div>
+          <div class="upgrade-level">Ур. ${upg.level}/${upg.maxLevel} • ${effectText}</div>
+        </div>
+        <button class="upgrade-buy" ${!canBuy ? 'disabled' : ''} data-idx="${idx}">
+          ${maxed ? 'MAX' : '💰 ' + formatNumber(cost)}
+        </button>
+      `;
+      upgradesList.appendChild(card);
+    });
 
-            let canvasX = (clientX - rect.left) * scaleX;
-            let canvasY = (clientY - rect.top) * scaleY;
+    // Кнопка сброса
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'close-btn';
+    resetBtn.textContent = '🔄 Сбросить игру';
+    resetBtn.style.marginTop = '12px';
+    resetBtn.style.background = 'linear-gradient(135deg, #FF6B6B, #D32F2F)';
+    resetBtn.style.boxShadow = '0 4px 0 #B71C1C';
+    resetBtn.addEventListener('click', () => {
+      if (confirm('Сбросить прогресс? Все монеты сохранятся.')) {
+        initGame();
+        renderShop();
+        updateCoinsDisplay();
+      }
+    });
+    upgradesList.appendChild(resetBtn);
 
-            canvasX = Math.min(W-12, Math.max(12, canvasX));
-            canvasY = Math.min(H-12, Math.max(12, canvasY));
+    upgradesList.querySelectorAll('.upgrade-buy').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const idx = parseInt(this.dataset.idx);
+        buyUpgrade(idx);
+      });
+    });
+  }
 
-            const cloth = clothes[activeClothIndex];
-            cloth.x = canvasX - dragOffsetX;
-            cloth.y = canvasY - dragOffsetY;
-            mom.x += (cloth.x - mom.x) * 0.25;
-            mom.y += (cloth.y - mom.y) * 0.25;
-        }
+  function buyUpgrade(idx) {
+    const upg = upgrades[idx];
+    const cost = getCost(upg);
+    if (game.coins >= cost && upg.level < upg.maxLevel) {
+      game.coins -= cost;
+      upg.level++;
+      updateCoinsDisplay();
+      renderShop();
+    }
+  }
 
-        function handleEnd(e) {
-            e.preventDefault();
-            if (!isDragging || activeClothIndex === -1 || gameFinished) {
-                isDragging = false;
-                activeClothIndex = -1;
-                return;
-            }
+  // ========== Обработка тапов ==========
+  function handleTap(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
-            const cloth = clothes[activeClothIndex];
-            const children = [child1, child2];
-            let collected = false;
-            for (let child of children) {
-                const dx = cloth.x - child.x;
-                const dy = cloth.y - child.y;
-                if (dx*dx + dy*dy < (cloth.r + child.r + 12) * (cloth.r + child.r + 12)) {
-                    cloth.collected = true;
-                    collected = true;
-                    break;
-                }
-            }
+    const s = Math.min(W, H) / 180;
+    const dx = x - game.momX;
+    const dy = y - game.momY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (!collected && !cloth.collected) {
-                cloth.x = 25 + Math.random() * 310;
-                cloth.y = 200 + Math.random() * 280;
-            }
+    if (dist < 60 * s && !game.readyToWalk) {
+      startCollect();
+      if (game.hintVisible) {
+        hintEl.style.display = 'none';
+        game.hintVisible = false;
+      }
+    }
+  }
 
-            isDragging = false;
-            activeClothIndex = -1;
-            updateGameState();
-            draw();
-        }
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      handleTap(t.clientX, t.clientY);
+    }
+  }, { passive: false });
 
-        // События
-        canvas.addEventListener('mousedown', handleStart);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', handleEnd);
+  canvas.addEventListener('mousedown', function(e) {
+    handleTap(e.clientX, e.clientY);
+  });
 
-        canvas.addEventListener('touchstart', handleStart, { passive: false });
-        window.addEventListener('touchmove', handleMove, { passive: false });
-        window.addEventListener('touchend', handleEnd, { passive: false });
+  // ========== Магазин ==========
+  shopBtn.addEventListener('click', () => {
+    renderShop();
+    shopModal.classList.add('show');
+  });
 
-        document.getElementById('resetBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            resetGame();
-            draw();
-        });
+  closeShop.addEventListener('click', () => {
+    shopModal.classList.remove('show');
+  });
 
-        resetGame();
-        draw();
+  shopModal.addEventListener('click', (e) => {
+    if (e.target === shopModal) {
+      shopModal.classList.remove('show');
+    }
+  });
 
-        setInterval(() => { draw(); }, 300);
-    })();
+  document.addEventListener('touchmove', (e) => {
+    if (e.target === canvas) e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+  // ========== Запуск ==========
+  function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  resize();
+  initGame();
+  updateCoinsDisplay();
+  loop();
+
+  setTimeout(() => resize(), 100);
+})();
 </script>
 </body>
 </html>
