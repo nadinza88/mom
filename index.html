@@ -1,750 +1,486 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Выпусти пар - Ретро игра</title>
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: #0a0a1a;
-    font-family: 'Courier New', monospace;
-    touch-action: none;
-    -webkit-user-select: none;
-    user-select: none;
-    overscroll-behavior: none;
-  }
-
-  #gameWrapper {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  #gameCanvas {
-    display: block;
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    background: #0a0a1a;
-  }
-
-  .bubble {
-    position: absolute;
-    background: #fff;
-    color: #000;
-    padding: 10px 16px;
-    font-size: 18px;
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-    border: 3px solid #000;
-    border-radius: 4px;
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s;
-    z-index: 20;
-    box-shadow: 4px 4px 0 #000;
-  }
-
-  .bubble::after {
-    content: '';
-    position: absolute;
-    bottom: -14px;
-    left: 20px;
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 14px solid #000;
-  }
-
-  .bubble::before {
-    content: '';
-    position: absolute;
-    bottom: -9px;
-    left: 23px;
-    width: 0;
-    height: 0;
-    border-left: 7px solid transparent;
-    border-right: 7px solid transparent;
-    border-top: 10px solid #fff;
-    z-index: 1;
-  }
-
-  .bubble.show { opacity: 1; }
-
-  #womanBubble { top: 15%; left: 10%; }
-  #manBubble { top: 15%; right: 10%; }
-
-  .counter {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    font-size: 28px;
-    color: #FFD700;
-    font-weight: bold;
-    text-shadow: 3px 3px 0 #000;
-    font-family: 'Courier New', monospace;
-    z-index: 30;
-    display: none;
-    background: rgba(0,0,0,0.6);
-    padding: 8px 16px;
-    border: 3px solid #FFD700;
-  }
-
-  .counter.show { display: block; }
-
-  .final-text {
-    position: fixed;
-    top: 30%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    font-size: 42px;
-    color: #FFD700;
-    font-weight: bold;
-    text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
-    font-family: 'Courier New', monospace;
-    z-index: 40;
-    text-align: center;
-    pointer-events: none;
-    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    white-space: nowrap;
-  }
-
-  .final-text.show { transform: translate(-50%, -50%) scale(1); }
-
-  .restart-btn {
-    position: fixed;
-    bottom: -120px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 18px 40px;
-    font-size: 22px;
-    font-weight: bold;
-    color: #FFF;
-    background: linear-gradient(135deg, #FF6B6B, #EE5A6F);
-    border: 4px solid #FFF;
-    cursor: pointer;
-    font-family: 'Courier New', monospace;
-    text-shadow: 2px 2px 0 #000;
-    box-shadow: 0 6px 0 #000;
-    transition: bottom 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 50;
-    letter-spacing: 2px;
-  }
-
-  .restart-btn.show { bottom: 40px; }
-
-  .restart-btn:active {
-    transform: translateX(-50%) translateY(4px);
-    box-shadow: 0 2px 0 #000;
-  }
-
-  .hint {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #FFD700;
-    font-size: 16px;
-    font-family: 'Courier New', monospace;
-    text-shadow: 2px 2px 0 #000;
-    z-index: 30;
-    opacity: 0;
-    transition: opacity 0.5s;
-    text-align: center;
-    pointer-events: none;
-    background: rgba(0,0,0,0.6);
-    padding: 8px 16px;
-    border: 2px solid #FFD700;
-  }
-
-  .hint.show { opacity: 1; animation: blink 1s infinite; }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .flash {
-    position: fixed;
-    inset: 0;
-    background: #fff;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 35;
-    transition: opacity 0.1s;
-  }
-
-  .flash.active { opacity: 1; }
-
-  @media (max-width: 600px) {
-    .bubble { font-size: 14px; padding: 8px 12px; }
-    .counter { font-size: 20px; padding: 6px 12px; }
-    .final-text { font-size: 28px; }
-    .restart-btn { font-size: 18px; padding: 14px 30px; }
-    .hint { font-size: 14px; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Мама-сборы 😂</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #ffe8c7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', cursive, sans-serif;
+            touch-action: pan-y;
+        }
+        #gameWrapper {
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 9 / 16;
+            background: #feda7a;
+            border-radius: 48px 48px 32px 32px;
+            box-shadow: 0 20px 0 #b47d44, 0 30px 40px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            touch-action: none;
+            border: 6px solid #fce1a4;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #b3d9f7;
+            touch-action: none;
+            cursor: grab;
+            border-radius: 40px;
+        }
+        #ui {
+            position: absolute;
+            bottom: 16px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            padding: 0 16px;
+            pointer-events: none;
+        }
+        #ui button {
+            pointer-events: auto;
+            background: #ffb347;
+            border: none;
+            border-radius: 60px;
+            padding: 14px 28px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #3d2b1a;
+            box-shadow: 0 8px 0 #b86f1f, 0 10px 20px rgba(0,0,0,0.2);
+            transition: 0.07s ease;
+            touch-action: manipulation;
+            border: 3px solid #ffd58c;
+            letter-spacing: 0.5px;
+            flex: 1;
+            max-width: 200px;
+            font-family: 'Comic Sans MS', cursive;
+        }
+        #ui button:active {
+            transform: translateY(8px);
+            box-shadow: 0 2px 0 #b86f1f;
+        }
+        #messageBox {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            background: rgba(255, 240, 180, 0.95);
+            padding: 14px 16px;
+            border-radius: 60px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2a1c0a;
+            box-shadow: 0 6px 0 #dba14b, 0 8px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(4px);
+            border: 3px solid #fad48b;
+            pointer-events: none;
+            min-height: 3.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.4;
+            font-family: 'Comic Sans MS', cursive;
+        }
+        #messageBox span {
+            background: #ffe28a;
+            padding: 0 14px;
+            border-radius: 40px;
+            margin: 0 6px;
+        }
+        @media (max-width: 480px) {
+            #gameWrapper {
+                border-radius: 28px;
+                max-width: 100vw;
+                aspect-ratio: 9 / 16;
+                border-width: 4px;
+            }
+            #ui button {
+                font-size: 1rem;
+                padding: 12px 16px;
+            }
+            #messageBox {
+                font-size: 1rem;
+                padding: 10px 14px;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                min-height: 3rem;
+            }
+        }
+        @media (max-height: 700px) {
+            #messageBox {
+                font-size: 0.85rem;
+                padding: 6px 12px;
+                min-height: 2.4rem;
+                top: 8px;
+            }
+            #ui button {
+                padding: 8px 14px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
 </head>
 <body>
 <div id="gameWrapper">
-  <canvas id="gameCanvas"></canvas>
-  <div class="bubble" id="womanBubble">Работать пойдем?</div>
-  <div class="bubble" id="manBubble">Не хочу</div>
+    <canvas id="gameCanvas" width="360" height="640"></canvas>
+    <div id="messageBox">🏠 Собери все вещи!</div>
+    <div id="ui">
+        <button id="resetBtn">🔄 Заново</button>
+    </div>
 </div>
-
-<div class="counter" id="counter">0 / 15</div>
-<div class="hint" id="hint">👆 НАЖМИ НА МУЖИКА!</div>
-<div class="final-text" id="finalText">Уф! Выпустила пар 💨</div>
-<div class="flash" id="flash"></div>
-<button class="restart-btn" id="restartBtn">ПОВТОРИТЬ</button>
-
 <script>
-(function() {
-  'use strict';
+    (function(){
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const messageEl = document.getElementById('messageBox');
 
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-  const womanBubbleEl = document.getElementById('womanBubble');
-  const manBubbleEl = document.getElementById('manBubble');
-  const counterEl = document.getElementById('counter');
-  const hintEl = document.getElementById('hint');
-  const finalTextEl = document.getElementById('finalText');
-  const flashEl = document.getElementById('flash');
-  const restartBtn = document.getElementById('restartBtn');
+        const W = 360, H = 640;
+        canvas.width = W; canvas.height = H;
 
-  let W = 0, H = 0;
-  let PIXEL = 4; // адаптивный размер "пикселя"
+        // ----- Персонажи (мультяшные) -----
+        let mom = { x: 160, y: 480, r: 28, color: '#d96c9e' };
 
-  function resize() {
-    const dpr = window.devicePixelRatio || 1;
-    const maxW = window.innerWidth;
-    const maxH = window.innerHeight;
-    const aspect = 16 / 10;
+        const child1 = { x: 60, y: 140, r: 24, color: '#f5a97f', name: 'Алиса' };
+        const child2 = { x: 280, y: 190, r: 24, color: '#7fc9a2', name: 'Макс' };
 
-    let w, h;
-    if (maxW / maxH > aspect) {
-      h = maxH;
-      w = h * aspect;
-    } else {
-      w = maxW;
-      h = w / aspect;
-    }
+        // Одежда с разными эмодзи
+        let clothes = [
+            { x: 30, y: 350, r: 18, collected: false, emoji: '🧢' },
+            { x: 310, y: 370, r: 18, collected: false, emoji: '🧣' },
+            { x: 170, y: 300, r: 18, collected: false, emoji: '🧥' },
+            { x: 70, y: 540, r: 18, collected: false, emoji: '👖' },
+            { x: 260, y: 550, r: 18, collected: false, emoji: '👟' },
+            { x: 140, y: 210, r: 18, collected: false, emoji: '🧦' }
+        ];
 
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
+        let allCollected = false;
+        let gameFinished = false;
+        let winFlag = false;
+        let child1Ready = false, child2Ready = false;
 
-    W = canvas.width;
-    H = canvas.height;
+        // Перетаскивание
+        let isDragging = false;
+        let dragOffsetX = 0, dragOffsetY = 0;
+        let activeClothIndex = -1;
 
-    // Адаптивный размер пикселя - чтобы персонажи были хорошо видны
-    // Персонаж ~30 пикселей высотой, должен занимать ~35% высоты экрана
-    PIXEL = Math.max(3, Math.floor(H / 85));
-
-    ctx.imageSmoothingEnabled = false;
-
-    // Пересчитываем позиции при ресайзе
-    if (state) {
-      recalcPositions();
-    }
-  }
-
-  // Цвета
-  const C = {
-    skin: '#FFDBAC',
-    skinDark: '#E8B890',
-    hairW: '#8B4513',
-    hairM: '#3E2723',
-    dress: '#E91E63',
-    dressDark: '#AD1457',
-    shirt: '#1E88E5',
-    shirtDark: '#1565C0',
-    pants: '#424242',
-    pantsDark: '#212121',
-    bat: '#6D4C41',
-    batDark: '#4E342E',
-    black: '#000',
-    white: '#FFF',
-    yellow: '#FFD700',
-    red: '#F44336',
-    purple: '#9C27B0'
-  };
-
-  const state = {
-    phase: 'intro',
-    t: 0,
-    womanX: 0,
-    womanY: 0,
-    manX: 0,
-    manY: 0,
-    walkFrame: 0,
-    hits: 0,
-    maxHits: 15,
-    hitAnim: 0,
-    manShake: 0,
-    batAngle: 0,
-    stars: [],
-    flashAlpha: 0,
-    finished: false
-  };
-
-  // Пересчёт позиций при изменении размера
-  function recalcPositions() {
-    const groundY = H * 0.78;
-    state.womanY = groundY;
-    state.manY = groundY;
-    state.manX = W * 0.72;
-
-    // Если женщина ещё не дошла до мужчины (фаза intro) - пересчитать её позицию
-    if (state.phase === 'intro') {
-      // Оставляем womanX как есть, но ограничиваем, чтобы не была слишком далеко
-      const targetX = state.manX - 45 * PIXEL;
-      if (state.womanX < -W * 0.3) {
-        state.womanX = -W * 0.15;
-      }
-      // Если уже дошла - фиксируем у цели
-      if (state.womanX >= targetX - 5) {
-        state.womanX = targetX;
-      }
-    } else {
-      // В других фазах - женщина уже у мужчины
-      state.womanX = state.manX - 45 * PIXEL;
-    }
-  }
-
-  function rect(x, y, w, h, color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(Math.floor(x), Math.floor(y), w, h);
-  }
-
-  // Рисование женщины
-  function drawWoman(x, y, walkFrame, batAngle) {
-    const s = PIXEL;
-    const bx = Math.floor(x);
-    const by = Math.floor(y);
-
-    // Тень
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.beginPath();
-    ctx.ellipse(bx + 10*s, by + 28*s, 12*s, 2*s, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Волосы (до плеч)
-    rect(bx + 3*s, by - 2*s, 14*s, 8*s, C.hairW);
-    rect(bx + 2*s, by + 4*s, 3*s, 8*s, C.hairW);
-    rect(bx + 15*s, by + 4*s, 3*s, 8*s, C.hairW);
-
-    // Голова
-    rect(bx + 4*s, by + 0*s, 12*s, 10*s, C.skin);
-    rect(bx + 4*s, by + 9*s, 12*s, 2*s, C.skinDark);
-
-    // Глаза
-    rect(bx + 6*s, by + 4*s, 2*s, 2*s, C.black);
-    rect(bx + 12*s, by + 4*s, 2*s, 2*s, C.black);
-    rect(bx + 6*s, by + 4*s, s, s, C.white);
-    rect(bx + 12*s, by + 4*s, s, s, C.white);
-
-    // Рот (злой в фазе ударов)
-    if (state.phase === 'hitting' || state.phase === 'finished') {
-      rect(bx + 8*s, by + 7*s, 4*s, s, C.red);
-      rect(bx + 8*s, by + 8*s, 4*s, s, C.black);
-    } else {
-      rect(bx + 8*s, by + 7*s, 4*s, s, C.black);
-    }
-
-    // Шея
-    rect(bx + 8*s, by + 10*s, 4*s, 2*s, C.skin);
-
-    // Платье
-    rect(bx + 4*s, by + 12*s, 12*s, 8*s, C.dress);
-    rect(bx + 4*s, by + 19*s, 12*s, s, C.dressDark);
-    rect(bx + 4*s, by + 16*s, 12*s, s, C.yellow);
-
-    // Юбка
-    rect(bx + 3*s, by + 20*s, 14*s, 4*s, C.dress);
-
-    // Левая рука
-    rect(bx + 1*s, by + 12*s, 3*s, 8*s, C.skin);
-    rect(bx + 1*s, by + 19*s, 3*s, 2*s, C.skinDark);
-
-    // Правая рука с дубинкой
-    ctx.save();
-    ctx.translate(bx + 16*s, by + 13*s);
-    ctx.rotate(batAngle);
-    rect(0, 0, 3*s, 8*s, C.skin);
-    rect(-s, -14*s, 5*s, 16*s, C.bat);
-    rect(-s, -14*s, 5*s, 2*s, C.batDark);
-    rect(-s, 0, 5*s, 2*s, C.batDark);
-    ctx.restore();
-
-    // Ноги
-    const legOff = walkFrame % 2 === 0 ? 0 : 1;
-    rect(bx + 5*s, by + 24*s, 3*s, 4*s - legOff*s, C.skin);
-    rect(bx + 12*s, by + 24*s, 3*s, 4*s - (1-legOff)*s, C.skin);
-    rect(bx + 4*s, by + 27*s - legOff*s, 5*s, 2*s, C.black);
-    rect(bx + 11*s, by + 27*s - (1-legOff)*s, 5*s, 2*s, C.black);
-  }
-
-  // Рисование мужчины
-  function drawMan(x, y, shakeX, shakeY) {
-    const s = PIXEL;
-    const bx = Math.floor(x + shakeX);
-    const by = Math.floor(y + shakeY);
-
-    // Тень
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.beginPath();
-    ctx.ellipse(bx + 10*s, by + 28*s, 12*s, 2*s, 0, 0, Math.PI*2);
-    ctx.fill();
-
-    // Волосы
-    rect(bx + 3*s, by - s, 14*s, 4*s, C.hairM);
-    rect(bx + 3*s, by + 2*s, 2*s, 2*s, C.hairM);
-
-    // Голова
-    rect(bx + 4*s, by + 0*s, 12*s, 10*s, C.skin);
-    rect(bx + 4*s, by + 9*s, 12*s, 2*s, C.skinDark);
-
-    // Глаза
-    if (state.hitAnim > 0) {
-      rect(bx + 6*s, by + 4*s, 2*s, s, C.black);
-      rect(bx + 7*s, by + 3*s, s, s, C.black);
-      rect(bx + 7*s, by + 5*s, s, s, C.black);
-      rect(bx + 12*s, by + 4*s, 2*s, s, C.black);
-      rect(bx + 13*s, by + 3*s, s, s, C.black);
-      rect(bx + 13*s, by + 5*s, s, s, C.black);
-      rect(bx + 8*s, by + 7*s, 4*s, 2*s, C.black);
-      rect(bx + 9*s, by + 8*s, 2*s, s, C.red);
-    } else {
-      rect(bx + 6*s, by + 4*s, 2*s, 2*s, C.black);
-      rect(bx + 12*s, by + 4*s, 2*s, 2*s, C.black);
-      rect(bx + 6*s, by + 4*s, s, s, C.white);
-      rect(bx + 12*s, by + 4*s, s, s, C.white);
-      rect(bx + 8*s, by + 7*s, 4*s, s, C.black);
-    }
-
-    // Шея
-    rect(bx + 8*s, by + 10*s, 4*s, 2*s, C.skin);
-
-    // Футболка
-    rect(bx + 3*s, by + 12*s, 14*s, 8*s, C.shirt);
-    rect(bx + 3*s, by + 19*s, 14*s, s, C.shirtDark);
-    rect(bx + 1*s, by + 12*s, 3*s, 3*s, C.shirt);
-    rect(bx + 16*s, by + 12*s, 3*s, 3*s, C.shirt);
-
-    // Руки
-    const armShake = state.hitAnim > 0 ? Math.sin(state.hitAnim * 0.5) * 2 : 0;
-    rect(bx + 1*s, by + 15*s + armShake, 3*s, 6*s, C.skin);
-    rect(bx + 16*s, by + 15*s - armShake, 3*s, 6*s, C.skin);
-
-    // Штаны
-    rect(bx + 4*s, by + 20*s, 5*s, 5*s, C.pants);
-    rect(bx + 11*s, by + 20*s, 5*s, 5*s, C.pants);
-    rect(bx + 4*s, by + 24*s, 5*s, s, C.pantsDark);
-    rect(bx + 11*s, by + 24*s, 5*s, s, C.pantsDark);
-
-    // Ботинки
-    rect(bx + 3*s, by + 25*s, 6*s, 2*s, C.black);
-    rect(bx + 11*s, by + 25*s, 6*s, 2*s, C.black);
-
-    // Синяк
-    if (state.hitAnim > 10) {
-      ctx.fillStyle = C.purple;
-      ctx.globalAlpha = state.hitAnim / 30;
-      ctx.beginPath();
-      ctx.ellipse(bx + 7*s, by + 2*s, 3*s, 2*s, 0, 0, Math.PI*2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  // Звёздочки при ударе
-  function drawStars() {
-    state.stars.forEach(star => {
-      ctx.save();
-      ctx.translate(star.x, star.y);
-      ctx.rotate(star.rot);
-      ctx.fillStyle = star.color;
-      ctx.globalAlpha = star.life / star.maxLife;
-      const sz = star.size;
-      ctx.fillRect(-sz/2, -sz*1.5, sz, sz*3);
-      ctx.fillRect(-sz*1.5, -sz/2, sz*3, sz);
-      ctx.restore();
-    });
-    ctx.globalAlpha = 1;
-  }
-
-  // Фон
-  function drawBackground() {
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#0a0a2e');
-    grad.addColorStop(0.6, '#1a1a4e');
-    grad.addColorStop(1, '#2d1a4e');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-
-    // Звёзды на небе
-    ctx.fillStyle = '#FFF';
-    for (let i = 0; i < 40; i++) {
-      const sx = (i * 137.5) % W;
-      const sy = (i * 73.3) % (H * 0.6);
-      const twinkle = Math.sin(state.t * 0.05 + i) * 0.5 + 0.5;
-      ctx.globalAlpha = twinkle;
-      ctx.fillRect(sx, sy, PIXEL, PIXEL);
-    }
-    ctx.globalAlpha = 1;
-
-    // Луна
-    const moonR = Math.max(20, H * 0.04);
-    ctx.fillStyle = '#FFF9C4';
-    ctx.beginPath();
-    ctx.arc(W * 0.85, H * 0.15, moonR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#0a0a2e';
-    ctx.beginPath();
-    ctx.arc(W * 0.85 + moonR * 0.3, H * 0.15 - moonR * 0.2, moonR * 0.85, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Земля
-    const groundY = H * 0.78 + 28 * PIXEL;
-    ctx.fillStyle = '#2d4a2b';
-    ctx.fillRect(0, groundY, W, H - groundY);
-    ctx.fillStyle = '#1a2e18';
-    ctx.fillRect(0, groundY, W, PIXEL * 2);
-
-    // Травинки
-    ctx.fillStyle = '#4CAF50';
-    for (let i = 0; i < W; i += PIXEL * 4) {
-      ctx.fillRect(i, groundY - PIXEL, PIXEL, PIXEL);
-      if (i % (PIXEL * 8) === 0) {
-        ctx.fillRect(i + PIXEL, groundY - PIXEL * 2, PIXEL, PIXEL);
-      }
-    }
-  }
-
-  function update() {
-    state.t++;
-
-    if (state.phase === 'intro') {
-      const targetX = state.manX - 45 * PIXEL;
-      // Скорость зависит от размера экрана - всегда одинаковое время
-      const speed = Math.max(2, W / 200);
-      state.womanX += speed;
-      state.walkFrame = Math.floor(state.t / 8) % 2;
-
-      if (state.womanX >= targetX) {
-        state.womanX = targetX;
-        state.phase = 'dialogue';
-        state.t = 0;
-      }
-    }
-
-    if (state.phase === 'dialogue') {
-      if (state.t === 30) womanBubbleEl.classList.add('show');
-      if (state.t === 120) manBubbleEl.classList.add('show');
-      if (state.t === 210) {
-        womanBubbleEl.classList.remove('show');
-        manBubbleEl.classList.remove('show');
-        state.phase = 'hitting';
-        state.t = 0;
-        counterEl.classList.add('show');
-        hintEl.classList.add('show');
-      }
-    }
-
-    if (state.phase === 'hitting') {
-      if (state.hitAnim > 0) {
-        state.hitAnim--;
-        if (state.hitAnim > 15) {
-          state.batAngle = -Math.PI / 2 - (state.hitAnim - 15) * 0.05;
-        } else {
-          state.batAngle = -Math.PI / 2 + (15 - state.hitAnim) * 0.15;
+        // ----- Сброс -----
+        function resetGame() {
+            mom.x = 160; mom.y = 480;
+            // разброс одежды
+            const positions = [
+                [30,350],[310,370],[170,300],[70,540],[260,550],[140,210]
+            ];
+            for (let i = positions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [positions[i], positions[j]] = [positions[j], positions[i]];
+            }
+            clothes.forEach((c, idx) => {
+                c.x = positions[idx][0];
+                c.y = positions[idx][1];
+                c.collected = false;
+            });
+            allCollected = false;
+            gameFinished = false;
+            winFlag = false;
+            child1Ready = false;
+            child2Ready = false;
+            isDragging = false;
+            activeClothIndex = -1;
+            messageEl.innerHTML = '🧸 Тащи одежду к детям!';
+            // дети на своих местах
+            child1.x = 60; child1.y = 140;
+            child2.x = 280; child2.y = 190;
         }
-        state.manShake = Math.sin(state.hitAnim * 0.8) * (state.hitAnim / 3);
-      } else {
-        state.batAngle = 0;
-        state.manShake = 0;
-      }
-    }
 
-    state.stars = state.stars.filter(s => {
-      s.x += s.vx;
-      s.y += s.vy;
-      s.vy += 0.3;
-      s.rot += s.vr;
-      s.life--;
-      return s.life > 0;
-    });
-  }
+        function checkAllCollected() {
+            return clothes.every(c => c.collected === true);
+        }
 
-  function draw() {
-    drawBackground();
-    drawMan(state.manX, state.manY, state.manShake, 0);
-    drawWoman(state.womanX, state.womanY, state.walkFrame, state.batAngle);
-    drawStars();
+        function updateGameState() {
+            if (gameFinished) return;
 
-    if (state.flashAlpha > 0) {
-      ctx.fillStyle = `rgba(255,255,255,${state.flashAlpha})`;
-      ctx.fillRect(0, 0, W, H);
-      state.flashAlpha -= 0.05;
-    }
-  }
+            const allCollectedNow = checkAllCollected();
+            if (allCollectedNow && !allCollected) {
+                allCollected = true;
+                child1Ready = true;
+                child2Ready = true;
+                messageEl.innerHTML = '🎉 Всё собрано! Мама ведёт гулять...';
+                setTimeout(() => {
+                    if (!gameFinished) {
+                        gameFinished = true;
+                        winFlag = false;
+                        messageEl.innerHTML = '👧 "Мааам, я хочу пиииисать!" 😂';
+                        // дети "убегают" вниз
+                        child1.x = 40; child1.y = 580;
+                        child2.x = 300; child2.y = 580;
+                        mom.x = 160; mom.y = 400;
+                        // добавим смешные лица
+                    }
+                }, 1600);
+            } else if (!allCollectedNow) {
+                allCollected = false;
+                if (!gameFinished) {
+                    const left = clothes.filter(c => !c.collected).length;
+                    messageEl.innerHTML = `🧦 Осталось: ${left} вещей`;
+                }
+            }
+        }
 
-  function loop() {
-    update();
-    draw();
-    requestAnimationFrame(loop);
-  }
+        // ----- Рисование -----
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
 
-  function handleHit(clientX, clientY) {
-    if (state.phase !== 'hitting') return;
+            // Пол с узором
+            ctx.fillStyle = '#d8b48c';
+            ctx.fillRect(0, 480, W, 160);
+            ctx.fillStyle = '#c9a57a';
+            for (let i=0; i<14; i++) {
+                ctx.beginPath();
+                ctx.arc(15 + i*28, 520, 12, 0, Math.PI*2);
+                ctx.fillStyle = (i%2===0) ? '#e3c9a8' : '#b48d62';
+                ctx.fill();
+            }
 
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
+            // Стены с обоями
+            ctx.fillStyle = '#fce8c8';
+            ctx.fillRect(0, 0, W, 480);
+            // Рисунок на стене
+            ctx.fillStyle = '#f5dbb1';
+            ctx.fillRect(20, 20, 60, 60);
+            ctx.fillStyle = '#fce8c8';
+            ctx.fillRect(25, 25, 50, 50);
+            ctx.fillStyle = '#f5dbb1';
+            ctx.fillRect(270, 20, 60, 60);
+            ctx.fillStyle = '#fce8c8';
+            ctx.fillRect(275, 25, 50, 50);
+            // Солнышко
+            ctx.fillStyle = '#ffdb7a';
+            ctx.beginPath();
+            ctx.arc(310, 50, 20, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#f7c54a';
+            for (let i=0; i<8; i++) {
+                let angle = i * Math.PI/4;
+                ctx.beginPath();
+                ctx.arc(310 + Math.cos(angle)*28, 50 + Math.sin(angle)*28, 6, 0, Math.PI*2);
+                ctx.fill();
+            }
 
-    const s = PIXEL;
-    const manLeft = state.manX - 5 * s;
-    const manRight = state.manX + 22 * s;
-    const manTop = state.manY - 5 * s;
-    const manBottom = state.manY + 28 * s;
+            // Дети
+            drawChild(child1);
+            drawChild(child2);
 
-    if (x >= manLeft && x <= manRight && y >= manTop && y <= manBottom) {
-      state.hits++;
-      state.hitAnim = 30;
-      counterEl.textContent = `${state.hits} / ${state.maxHits}`;
-      hintEl.classList.remove('show');
+            // Одежда
+            clothes.forEach(c => {
+                if (!c.collected) {
+                    ctx.shadowColor = '#4a2e14';
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
+                    ctx.fillStyle = '#f7d48a';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.font = '24px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(c.emoji, c.x, c.y-1);
+                    // блеск
+                    ctx.fillStyle = 'rgba(255,255,230,0.3)';
+                    ctx.beginPath();
+                    ctx.arc(c.x-4, c.y-6, 6, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            });
 
-      const hitX = state.manX + 10 * s;
-      const hitY = state.manY + 3 * s;
-      const colors = ['#FFD700', '#FF5722', '#FFEB3B', '#FF9800', '#FFF'];
-      for (let i = 0; i < 8; i++) {
-        const angle = (Math.PI * 2 * i) / 8 + Math.random() * 0.5;
-        const speed = 4 + Math.random() * 4;
-        state.stars.push({
-          x: hitX,
-          y: hitY,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 2,
-          rot: Math.random() * Math.PI,
-          vr: (Math.random() - 0.5) * 0.3,
-          size: s * (1 + Math.random()),
-          color: colors[Math.floor(Math.random() * colors.length)],
-          life: 30,
-          maxLife: 30
+            // Мама (с лицом)
+            ctx.shadowColor = '#3d2412';
+            ctx.shadowBlur = 16;
+            ctx.beginPath();
+            ctx.arc(mom.x, mom.y, mom.r, 0, Math.PI*2);
+            ctx.fillStyle = mom.color;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.font = '32px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('👩', mom.x-1, mom.y-2);
+
+            // Если финал шутка
+            if (gameFinished && !winFlag) {
+                ctx.font = '28px sans-serif';
+                ctx.fillStyle = '#2d1a0a';
+                ctx.fillText('😱', mom.x+32, mom.y-30);
+                // облачко
+                ctx.fillStyle = 'rgba(255,255,230,0.85)';
+                ctx.beginPath();
+                ctx.ellipse(mom.x+50, mom.y-50, 40, 25, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#2d1a0a';
+                ctx.font = '18px sans-serif';
+                ctx.fillText('Ой!', mom.x+50, mom.y-48);
+            }
+
+            // если победа (но не используется)
+            if (winFlag) {
+                ctx.fillStyle = '#fddf8a';
+                ctx.fillRect(60, 220, 240, 70);
+                ctx.fillStyle = '#3d2b1a';
+                ctx.font = 'bold 24px sans-serif';
+                ctx.fillText('🎈 УРА! 🎈', 180, 258);
+            }
+        }
+
+        function drawChild(child) {
+            ctx.shadowColor = '#1f1307';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(child.x, child.y, child.r, 0, Math.PI*2);
+            ctx.fillStyle = child.color;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.font = '28px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🧒', child.x-1, child.y-1);
+            ctx.fillStyle = '#1f1509';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText(child.name, child.x, child.y - child.r - 14);
+        }
+
+        // ----- Ввод -----
+        function handleStart(e) {
+            e.preventDefault();
+            if (gameFinished) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = W / rect.width;
+            const scaleY = H / rect.height;
+
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const canvasX = (clientX - rect.left) * scaleX;
+            const canvasY = (clientY - rect.top) * scaleY;
+
+            for (let i = 0; i < clothes.length; i++) {
+                const c = clothes[i];
+                if (c.collected) continue;
+                const dx = canvasX - c.x;
+                const dy = canvasY - c.y;
+                if (dx*dx + dy*dy < (c.r+16)*(c.r+16)) {
+                    isDragging = true;
+                    activeClothIndex = i;
+                    dragOffsetX = canvasX - c.x;
+                    dragOffsetY = canvasY - c.y;
+                    break;
+                }
+            }
+        }
+
+        function handleMove(e) {
+            e.preventDefault();
+            if (!isDragging || activeClothIndex === -1 || gameFinished) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = W / rect.width;
+            const scaleY = H / rect.height;
+
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            let canvasX = (clientX - rect.left) * scaleX;
+            let canvasY = (clientY - rect.top) * scaleY;
+
+            canvasX = Math.min(W-12, Math.max(12, canvasX));
+            canvasY = Math.min(H-12, Math.max(12, canvasY));
+
+            const cloth = clothes[activeClothIndex];
+            cloth.x = canvasX - dragOffsetX;
+            cloth.y = canvasY - dragOffsetY;
+            mom.x += (cloth.x - mom.x) * 0.25;
+            mom.y += (cloth.y - mom.y) * 0.25;
+        }
+
+        function handleEnd(e) {
+            e.preventDefault();
+            if (!isDragging || activeClothIndex === -1 || gameFinished) {
+                isDragging = false;
+                activeClothIndex = -1;
+                return;
+            }
+
+            const cloth = clothes[activeClothIndex];
+            const children = [child1, child2];
+            let collected = false;
+            for (let child of children) {
+                const dx = cloth.x - child.x;
+                const dy = cloth.y - child.y;
+                if (dx*dx + dy*dy < (cloth.r + child.r + 12) * (cloth.r + child.r + 12)) {
+                    cloth.collected = true;
+                    collected = true;
+                    break;
+                }
+            }
+
+            if (!collected && !cloth.collected) {
+                cloth.x = 25 + Math.random() * 310;
+                cloth.y = 200 + Math.random() * 280;
+            }
+
+            isDragging = false;
+            activeClothIndex = -1;
+            updateGameState();
+            draw();
+        }
+
+        // События
+        canvas.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+
+        canvas.addEventListener('touchstart', handleStart, { passive: false });
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('touchend', handleEnd, { passive: false });
+
+        document.getElementById('resetBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            resetGame();
+            draw();
         });
-      }
 
-      if (state.hits >= state.maxHits) {
-        finishGame();
-      }
-    }
-  }
+        resetGame();
+        draw();
 
-  function finishGame() {
-    state.phase = 'finished';
-    state.finished = true;
-    state.flashAlpha = 1;
-    counterEl.classList.remove('show');
-    hintEl.classList.remove('show');
-
-    flashEl.classList.add('active');
-    setTimeout(() => flashEl.classList.remove('active'), 150);
-
-    setTimeout(() => finalTextEl.classList.add('show'), 400);
-    setTimeout(() => restartBtn.classList.add('show'), 1200);
-  }
-
-  function resetGame() {
-    state.phase = 'intro';
-    state.t = 0;
-    state.hits = 0;
-    state.hitAnim = 0;
-    state.manShake = 0;
-    state.batAngle = 0;
-    state.stars = [];
-    state.flashAlpha = 0;
-    state.finished = false;
-    state.walkFrame = 0;
-
-    recalcPositions();
-    state.womanX = -W * 0.15;
-
-    counterEl.classList.remove('show');
-    counterEl.textContent = '0 / 15';
-    hintEl.classList.remove('show');
-    finalTextEl.classList.remove('show');
-    restartBtn.classList.remove('show');
-    womanBubbleEl.classList.remove('show');
-    manBubbleEl.classList.remove('show');
-    flashEl.classList.remove('active');
-  }
-
-  // События
-  canvas.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      const t = e.changedTouches[i];
-      handleHit(t.clientX, t.clientY);
-    }
-  }, { passive: false });
-
-  canvas.addEventListener('mousedown', function(e) {
-    handleHit(e.clientX, e.clientY);
-  });
-
-  canvas.addEventListener('click', function(e) {
-    e.preventDefault();
-  });
-
-  restartBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    resetGame();
-  });
-
-  restartBtn.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    resetGame();
-  }, { passive: false });
-
-  document.addEventListener('touchmove', function(e) {
-    if (e.target === canvas) e.preventDefault();
-  }, { passive: false });
-
-  document.addEventListener('gesturestart', function(e) {
-    e.preventDefault();
-  });
-
-  // Инициализация
-  resize();
-  recalcPositions();
-  state.womanX = -W * 0.15;
-  loop();
-
-  // Повторный вызов resize после полной загрузки для корректных размеров
-  window.addEventListener('load', function() {
-    resize();
-  });
-})();
+        setInterval(() => { draw(); }, 300);
+    })();
 </script>
 </body>
 </html>
