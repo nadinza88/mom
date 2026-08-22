@@ -3,1128 +3,747 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Мама-сборы 🏃‍♀️👶</title>
+<title>Выпусти пар - Ретро игра</title>
 <style>
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
   }
 
   html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+    background: #0a0a1a;
+    font-family: 'Courier New', monospace;
     touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
     overscroll-behavior: none;
   }
 
-  body {
-    background: linear-gradient(180deg, #FFE5B4 0%, #FFB07C 100%);
-  }
-
-  #game {
+  #gameWrapper {
     position: fixed;
     inset: 0;
     display: flex;
-    flex-direction: column;
-  }
-
-  .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    padding-top: max(12px, env(safe-area-inset-top));
-    z-index: 10;
-    pointer-events: none;
-  }
-
-  .coins-display {
-    background: linear-gradient(135deg, #FFD700, #FFA500);
-    border: 3px solid #8B4513;
-    border-radius: 30px;
-    padding: 8px 18px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 0 #8B4513, 0 6px 12px rgba(0,0,0,0.2);
-    pointer-events: auto;
-  }
-
-  .coin-icon {
-    width: 28px;
-    height: 28px;
-    background: radial-gradient(circle at 30% 30%, #FFEB3B, #FFC107, #FF9800);
-    border-radius: 50%;
-    border: 2px solid #8B4513;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    font-size: 16px;
-    font-weight: bold;
-    color: #8B4513;
-    animation: coinSpin 3s linear infinite;
+    align-items: center;
   }
 
-  @keyframes coinSpin {
-    0%, 100% { transform: scaleX(1); }
-    50% { transform: scaleX(0.3); }
+  #gameCanvas {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    background: #0a0a1a;
   }
 
-  .coins-amount {
-    font-size: 22px;
-    font-weight: bold;
-    color: #fff;
-    text-shadow: 2px 2px 0 #8B4513;
-  }
-
-  .shop-btn {
-    background: linear-gradient(135deg, #9C27B0, #673AB7);
-    border: 3px solid #fff;
-    border-radius: 30px;
-    padding: 10px 18px;
+  .bubble {
+    position: absolute;
+    background: #fff;
+    color: #000;
+    padding: 10px 16px;
     font-size: 18px;
     font-weight: bold;
-    color: #fff;
-    text-shadow: 2px 2px 0 #4A148C;
-    box-shadow: 0 4px 0 #4A148C, 0 6px 12px rgba(0,0,0,0.2);
+    font-family: 'Courier New', monospace;
+    border: 3px solid #000;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 20;
+    box-shadow: 4px 4px 0 #000;
+  }
+
+  .bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    left: 20px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 14px solid #000;
+  }
+
+  .bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    left: 23px;
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 10px solid #fff;
+    z-index: 1;
+  }
+
+  .bubble.show { opacity: 1; }
+
+  #womanBubble { top: 15%; left: 10%; }
+  #manBubble { top: 15%; right: 10%; }
+
+  .counter {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    font-size: 28px;
+    color: #FFD700;
+    font-weight: bold;
+    text-shadow: 3px 3px 0 #000;
+    font-family: 'Courier New', monospace;
+    z-index: 30;
+    display: none;
+    background: rgba(0,0,0,0.6);
+    padding: 8px 16px;
+    border: 3px solid #FFD700;
+  }
+
+  .counter.show { display: block; }
+
+  .final-text {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: 42px;
+    color: #FFD700;
+    font-weight: bold;
+    text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    font-family: 'Courier New', monospace;
+    z-index: 40;
+    text-align: center;
+    pointer-events: none;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+
+  .final-text.show { transform: translate(-50%, -50%) scale(1); }
+
+  .restart-btn {
+    position: fixed;
+    bottom: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 18px 40px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #FFF;
+    background: linear-gradient(135deg, #FF6B6B, #EE5A6F);
+    border: 4px solid #FFF;
     cursor: pointer;
-    pointer-events: auto;
-    transition: transform 0.1s;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0 #000;
+    box-shadow: 0 6px 0 #000;
+    transition: bottom 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 50;
+    letter-spacing: 2px;
   }
 
-  .shop-btn:active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #4A148C;
-  }
+  .restart-btn.show { bottom: 40px; }
 
-  #canvas {
-    flex: 1;
-    width: 100%;
-    display: block;
-    touch-action: none;
+  .restart-btn:active {
+    transform: translateX(-50%) translateY(4px);
+    box-shadow: 0 2px 0 #000;
   }
 
   .hint {
-    position: absolute;
+    position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255,255,255,0.9);
-    border: 3px solid #FF6B9D;
-    border-radius: 20px;
-    padding: 10px 20px;
+    color: #FFD700;
     font-size: 16px;
-    font-weight: bold;
-    color: #FF1493;
-    text-shadow: 1px 1px 0 #fff;
-    z-index: 5;
-    animation: hintBounce 1.5s infinite;
+    font-family: 'Courier New', monospace;
+    text-shadow: 2px 2px 0 #000;
+    z-index: 30;
+    opacity: 0;
+    transition: opacity 0.5s;
+    text-align: center;
     pointer-events: none;
+    background: rgba(0,0,0,0.6);
+    padding: 8px 16px;
+    border: 2px solid #FFD700;
   }
 
-  @keyframes hintBounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-8px); }
+  .hint.show { opacity: 1; animation: blink 1s infinite; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
   }
 
-  .modal-overlay {
+  .flash {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-    padding: 20px;
-  }
-
-  .modal-overlay.show {
-    display: flex;
-  }
-
-  .modal {
-    background: linear-gradient(135deg, #FFF9E6, #FFE5B4);
-    border: 4px solid #8B4513;
-    border-radius: 24px;
-    padding: 20px;
-    max-width: 400px;
-    width: 100%;
-    max-height: 85vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  }
-
-  .modal-title {
-    text-align: center;
-    font-size: 28px;
-    color: #8B4513;
-    margin-bottom: 16px;
-    text-shadow: 2px 2px 0 #FFD700;
-  }
-
-  .upgrade-card {
     background: #fff;
-    border: 3px solid #FFB07C;
-    border-radius: 16px;
-    padding: 12px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: transform 0.1s;
-  }
-
-  .upgrade-card:active {
-    transform: scale(0.98);
-  }
-
-  .upgrade-icon {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, #FFD700, #FFA500);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    border: 2px solid #8B4513;
-    flex-shrink: 0;
-  }
-
-  .upgrade-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .upgrade-name {
-    font-size: 16px;
-    font-weight: bold;
-    color: #8B4513;
-    margin-bottom: 2px;
-  }
-
-  .upgrade-desc {
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 4px;
-  }
-
-  .upgrade-level {
-    font-size: 11px;
-    color: #FF1493;
-    font-weight: bold;
-  }
-
-  .upgrade-buy {
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
-    border: 2px solid #fff;
-    border-radius: 12px;
-    padding: 8px 12px;
-    color: #fff;
-    font-weight: bold;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    box-shadow: 0 3px 0 #1B5E20;
-    flex-shrink: 0;
-  }
-
-  .upgrade-buy:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 #1B5E20;
-  }
-
-  .upgrade-buy:disabled {
-    background: linear-gradient(135deg, #9E9E9E, #616161);
-    box-shadow: 0 3px 0 #424242;
-    cursor: not-allowed;
-  }
-
-  .close-btn {
-    width: 100%;
-    background: linear-gradient(135deg, #FF6B9D, #FF1493);
-    border: 3px solid #fff;
-    border-radius: 16px;
-    padding: 12px;
-    color: #fff;
-    font-size: 18px;
-    font-weight: bold;
-    text-shadow: 2px 2px 0 #C2185B;
-    box-shadow: 0 4px 0 #C2185B;
-    cursor: pointer;
-    margin-top: 8px;
-  }
-
-  .close-btn:active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #C2185B;
-  }
-
-  .floating-coin {
-    position: absolute;
-    font-size: 28px;
-    font-weight: bold;
-    color: #FFD700;
-    text-shadow: 2px 2px 0 #8B4513;
+    opacity: 0;
     pointer-events: none;
-    z-index: 20;
-    animation: floatUp 1.2s ease-out forwards;
+    z-index: 35;
+    transition: opacity 0.1s;
   }
 
-  @keyframes floatUp {
-    0% { transform: translateY(0) scale(0.5); opacity: 0; }
-    20% { transform: translateY(-20px) scale(1.4); opacity: 1; }
-    100% { transform: translateY(-120px) scale(1); opacity: 0; }
+  .flash.active { opacity: 1; }
+
+  @media (max-width: 600px) {
+    .bubble { font-size: 14px; padding: 8px 12px; }
+    .counter { font-size: 20px; padding: 6px 12px; }
+    .final-text { font-size: 28px; }
+    .restart-btn { font-size: 18px; padding: 14px 30px; }
+    .hint { font-size: 14px; }
   }
 </style>
 </head>
 <body>
-<div id="game">
-  <div class="top-bar">
-    <div class="coins-display">
-      <div class="coin-icon">$</div>
-      <div class="coins-amount" id="coinsAmount">0</div>
-    </div>
-    <button class="shop-btn" id="shopBtn">🛍️ Магазин</button>
-  </div>
-  <canvas id="canvas"></canvas>
-  <div class="hint" id="hint">👆 Тапни на маму, чтобы собрать детей!</div>
+<div id="gameWrapper">
+  <canvas id="gameCanvas"></canvas>
+  <div class="bubble" id="womanBubble">Работать пойдем?</div>
+  <div class="bubble" id="manBubble">Не хочу</div>
 </div>
 
-<div class="modal-overlay" id="shopModal">
-  <div class="modal">
-    <div class="modal-title">🛍️ Магазин</div>
-    <div id="upgradesList"></div>
-    <button class="close-btn" id="closeShop">Закрыть</button>
-  </div>
-</div>
+<div class="counter" id="counter">0 / 15</div>
+<div class="hint" id="hint">👆 НАЖМИ НА МУЖИКА!</div>
+<div class="final-text" id="finalText">Уф! Выпустила пар 💨</div>
+<div class="flash" id="flash"></div>
+<button class="restart-btn" id="restartBtn">ПОВТОРИТЬ</button>
 
 <script>
 (function() {
   'use strict';
 
-  const canvas = document.getElementById('canvas');
+  const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
-  const coinsAmountEl = document.getElementById('coinsAmount');
-  const shopBtn = document.getElementById('shopBtn');
-  const shopModal = document.getElementById('shopModal');
-  const closeShop = document.getElementById('closeShop');
-  const upgradesList = document.getElementById('upgradesList');
+  const womanBubbleEl = document.getElementById('womanBubble');
+  const manBubbleEl = document.getElementById('manBubble');
+  const counterEl = document.getElementById('counter');
   const hintEl = document.getElementById('hint');
+  const finalTextEl = document.getElementById('finalText');
+  const flashEl = document.getElementById('flash');
+  const restartBtn = document.getElementById('restartBtn');
 
   let W = 0, H = 0;
-  let dpr = window.devicePixelRatio || 1;
+  let PIXEL = 4; // адаптивный размер "пикселя"
 
   function resize() {
-    dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    W = rect.width;
-    H = rect.height;
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const dpr = window.devicePixelRatio || 1;
+    const maxW = window.innerWidth;
+    const maxH = window.innerHeight;
+    const aspect = 16 / 10;
+
+    let w, h;
+    if (maxW / maxH > aspect) {
+      h = maxH;
+      w = h * aspect;
+    } else {
+      w = maxW;
+      h = w / aspect;
+    }
+
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+
+    W = canvas.width;
+    H = canvas.height;
+
+    // Адаптивный размер пикселя - чтобы персонажи были хорошо видны
+    // Персонаж ~30 пикселей высотой, должен занимать ~35% высоты экрана
+    PIXEL = Math.max(3, Math.floor(H / 85));
+
+    ctx.imageSmoothingEnabled = false;
+
+    // Пересчитываем позиции при ресайзе
+    if (state) {
+      recalcPositions();
+    }
   }
 
-  window.addEventListener('resize', resize);
-  window.addEventListener('orientationchange', () => setTimeout(resize, 200));
-
-  // ========== Игровые объекты ==========
-  const game = {
-    coins: 0,
-    t: 0,
-    momState: 'idle', // idle, running, collect, done
-    runTimer: 0,
-    cooldownTimer: 0,
-    kids: [],
-    particles: [],
-    toys: [],
-    readyToWalk: false,
-    finalMessage: false,
-    autoTimer: 0,
-    hintVisible: true,
-    momX: 0,
-    momY: 0,
-    targetX: 0,
-    targetY: 0,
-    squish: 0
+  // Цвета
+  const C = {
+    skin: '#FFDBAC',
+    skinDark: '#E8B890',
+    hairW: '#8B4513',
+    hairM: '#3E2723',
+    dress: '#E91E63',
+    dressDark: '#AD1457',
+    shirt: '#1E88E5',
+    shirtDark: '#1565C0',
+    pants: '#424242',
+    pantsDark: '#212121',
+    bat: '#6D4C41',
+    batDark: '#4E342E',
+    black: '#000',
+    white: '#FFF',
+    yellow: '#FFD700',
+    red: '#F44336',
+    purple: '#9C27B0'
   };
 
-  // Дети и игрушки
-  const KID_COUNT = 2;
-  const TOY_COUNT = 4;
+  const state = {
+    phase: 'intro',
+    t: 0,
+    womanX: 0,
+    womanY: 0,
+    manX: 0,
+    manY: 0,
+    walkFrame: 0,
+    hits: 0,
+    maxHits: 15,
+    hitAnim: 0,
+    manShake: 0,
+    batAngle: 0,
+    stars: [],
+    flashAlpha: 0,
+    finished: false
+  };
 
-  function initGame() {
-    game.kids = [];
-    game.toys = [];
-    game.momState = 'idle';
-    game.runTimer = 0;
-    game.cooldownTimer = 0;
-    game.readyToWalk = false;
-    game.finalMessage = false;
-    game.squish = 0;
-    game.autoTimer = 0;
+  // Пересчёт позиций при изменении размера
+  function recalcPositions() {
+    const groundY = H * 0.78;
+    state.womanY = groundY;
+    state.manY = groundY;
+    state.manX = W * 0.72;
 
-    const cat = getCatPos();
-    game.momX = cat.x;
-    game.momY = cat.y;
-
-    // Размещаем детей и игрушки
-    const positions = [
-      { x: 0.2, y: 0.3 },
-      { x: 0.75, y: 0.25 },
-      { x: 0.15, y: 0.7 },
-      { x: 0.8, y: 0.65 },
-      { x: 0.45, y: 0.2 },
-      { x: 0.55, y: 0.75 }
-    ];
-
-    for (let i = 0; i < KID_COUNT; i++) {
-      game.kids.push({
-        x: positions[i].x * W,
-        y: positions[i].y * H,
-        collected: false,
-        r: 35,
-        color: i === 0 ? '#FF6B9D' : '#4CAF50',
-        emoji: i === 0 ? '👧' : '👦',
-        name: i === 0 ? 'Аня' : 'Петя'
-      });
-    }
-
-    for (let i = 0; i < TOY_COUNT; i++) {
-      const idx = i + KID_COUNT;
-      game.toys.push({
-        x: positions[idx].x * W,
-        y: positions[idx].y * H,
-        collected: false,
-        r: 22,
-        emoji: ['🧸', '🎒', '🧢', '🧣'][i],
-        color: ['#FF9800', '#9C27B0', '#2196F3', '#FF5722'][i]
-      });
-    }
-  }
-
-  function getCatPos() {
-    const size = Math.min(W, H) * 0.55;
-    return {
-      x: W / 2,
-      y: H * 0.55,
-      size: size
-    };
-  }
-
-  // ========== Отрисовка ==========
-  function drawBackground() {
-    const tileSize = 40;
-    for (let y = 0; y < H; y += tileSize) {
-      for (let x = 0; x < W; x += tileSize) {
-        const isLight = ((x / tileSize) + (y / tileSize)) % 2 === 0;
-        ctx.fillStyle = isLight ? '#FFE5D9' : '#FFD4C0';
-        ctx.fillRect(x, y, tileSize, tileSize);
-        ctx.strokeStyle = '#FFB07C';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, tileSize, tileSize);
+    // Если женщина ещё не дошла до мужчины (фаза intro) - пересчитать её позицию
+    if (state.phase === 'intro') {
+      // Оставляем womanX как есть, но ограничиваем, чтобы не была слишком далеко
+      const targetX = state.manX - 45 * PIXEL;
+      if (state.womanX < -W * 0.3) {
+        state.womanX = -W * 0.15;
       }
+      // Если уже дошла - фиксируем у цели
+      if (state.womanX >= targetX - 5) {
+        state.womanX = targetX;
+      }
+    } else {
+      // В других фазах - женщина уже у мужчины
+      state.womanX = state.manX - 45 * PIXEL;
     }
-
-    // Коврик
-    const cat = getCatPos();
-    const rugW = cat.size * 1.4;
-    const rugH = cat.size * 0.6;
-    ctx.fillStyle = 'rgba(0,0,0,0.15)';
-    ctx.beginPath();
-    ctx.ellipse(cat.x, cat.y + cat.size * 0.35 + rugH / 2 + 5, rugW / 2, rugH / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    const rugGrad = ctx.createLinearGradient(0, cat.y + cat.size * 0.35, 0, cat.y + cat.size * 0.35 + rugH);
-    rugGrad.addColorStop(0, '#FF6B9D');
-    rugGrad.addColorStop(1, '#C2185B');
-    ctx.fillStyle = rugGrad;
-    ctx.beginPath();
-    ctx.ellipse(cat.x, cat.y + cat.size * 0.35 + rugH / 2, rugW / 2, rugH / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.ellipse(cat.x, cat.y + cat.size * 0.35 + rugH / 2, rugW / 2 - 10, rugH / 2 - 8, 0, 0, Math.PI * 2);
-    ctx.stroke();
   }
 
-  function drawMom() {
-    const s = Math.min(W, H) / 180;
-    const cx = game.momX;
-    const cy = game.momY;
+  function rect(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.floor(x), Math.floor(y), w, h);
+  }
 
-    let squish = 0;
-    if (game.squish > 0) squish = game.squish * 6;
-
-    ctx.save();
-    ctx.translate(cx, cy + squish);
+  // Рисование женщины
+  function drawWoman(x, y, walkFrame, batAngle) {
+    const s = PIXEL;
+    const bx = Math.floor(x);
+    const by = Math.floor(y);
 
     // Тень
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
-    ctx.ellipse(0, 50 * s, 45 * s, 8 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(bx + 10*s, by + 28*s, 12*s, 2*s, 0, 0, Math.PI*2);
     ctx.fill();
 
-    // Платье
-    const dressGrad = ctx.createRadialGradient(-10 * s, 0, 10 * s, 0, 10 * s, 50 * s);
-    dressGrad.addColorStop(0, '#FF6B9D');
-    dressGrad.addColorStop(1, '#D81B60');
-    ctx.fillStyle = dressGrad;
-    ctx.beginPath();
-    ctx.ellipse(0, 20 * s, 38 * s, 35 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Пояс
-    ctx.fillStyle = '#FFD700';
-    ctx.fillRect(-30 * s, 20 * s, 60 * s, 4 * s);
-
-    // Ноги
-    ctx.fillStyle = '#FFB74D';
-    ctx.beginPath();
-    ctx.ellipse(-18 * s, 48 * s, 8 * s, 10 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(18 * s, 48 * s, 8 * s, 10 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Туфли
-    ctx.fillStyle = '#E91E63';
-    ctx.beginPath();
-    ctx.ellipse(-22 * s, 52 * s, 12 * s, 5 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(22 * s, 52 * s, 12 * s, 5 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Руки
-    ctx.fillStyle = '#FFB74D';
-    ctx.beginPath();
-    ctx.ellipse(-40 * s, 20 * s, 8 * s, 16 * s, -0.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(40 * s, 20 * s, 8 * s, 16 * s, 0.2, 0, Math.PI * 2);
-    ctx.fill();
+    // Волосы (до плеч)
+    rect(bx + 3*s, by - 2*s, 14*s, 8*s, C.hairW);
+    rect(bx + 2*s, by + 4*s, 3*s, 8*s, C.hairW);
+    rect(bx + 15*s, by + 4*s, 3*s, 8*s, C.hairW);
 
     // Голова
-    const headGrad = ctx.createRadialGradient(-5 * s, -30 * s, 5 * s, 0, -25 * s, 35 * s);
-    headGrad.addColorStop(0, '#FFB74D');
-    headGrad.addColorStop(1, '#FF9800');
-    ctx.fillStyle = headGrad;
+    rect(bx + 4*s, by + 0*s, 12*s, 10*s, C.skin);
+    rect(bx + 4*s, by + 9*s, 12*s, 2*s, C.skinDark);
+
+    // Глаза
+    rect(bx + 6*s, by + 4*s, 2*s, 2*s, C.black);
+    rect(bx + 12*s, by + 4*s, 2*s, 2*s, C.black);
+    rect(bx + 6*s, by + 4*s, s, s, C.white);
+    rect(bx + 12*s, by + 4*s, s, s, C.white);
+
+    // Рот (злой в фазе ударов)
+    if (state.phase === 'hitting' || state.phase === 'finished') {
+      rect(bx + 8*s, by + 7*s, 4*s, s, C.red);
+      rect(bx + 8*s, by + 8*s, 4*s, s, C.black);
+    } else {
+      rect(bx + 8*s, by + 7*s, 4*s, s, C.black);
+    }
+
+    // Шея
+    rect(bx + 8*s, by + 10*s, 4*s, 2*s, C.skin);
+
+    // Платье
+    rect(bx + 4*s, by + 12*s, 12*s, 8*s, C.dress);
+    rect(bx + 4*s, by + 19*s, 12*s, s, C.dressDark);
+    rect(bx + 4*s, by + 16*s, 12*s, s, C.yellow);
+
+    // Юбка
+    rect(bx + 3*s, by + 20*s, 14*s, 4*s, C.dress);
+
+    // Левая рука
+    rect(bx + 1*s, by + 12*s, 3*s, 8*s, C.skin);
+    rect(bx + 1*s, by + 19*s, 3*s, 2*s, C.skinDark);
+
+    // Правая рука с дубинкой
+    ctx.save();
+    ctx.translate(bx + 16*s, by + 13*s);
+    ctx.rotate(batAngle);
+    rect(0, 0, 3*s, 8*s, C.skin);
+    rect(-s, -14*s, 5*s, 16*s, C.bat);
+    rect(-s, -14*s, 5*s, 2*s, C.batDark);
+    rect(-s, 0, 5*s, 2*s, C.batDark);
+    ctx.restore();
+
+    // Ноги
+    const legOff = walkFrame % 2 === 0 ? 0 : 1;
+    rect(bx + 5*s, by + 24*s, 3*s, 4*s - legOff*s, C.skin);
+    rect(bx + 12*s, by + 24*s, 3*s, 4*s - (1-legOff)*s, C.skin);
+    rect(bx + 4*s, by + 27*s - legOff*s, 5*s, 2*s, C.black);
+    rect(bx + 11*s, by + 27*s - (1-legOff)*s, 5*s, 2*s, C.black);
+  }
+
+  // Рисование мужчины
+  function drawMan(x, y, shakeX, shakeY) {
+    const s = PIXEL;
+    const bx = Math.floor(x + shakeX);
+    const by = Math.floor(y + shakeY);
+
+    // Тень
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
-    ctx.ellipse(0, -25 * s, 30 * s, 30 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(bx + 10*s, by + 28*s, 12*s, 2*s, 0, 0, Math.PI*2);
     ctx.fill();
 
     // Волосы
-    ctx.fillStyle = '#8D6E63';
-    ctx.beginPath();
-    ctx.arc(0, -35 * s, 32 * s, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#795548';
-    ctx.beginPath();
-    ctx.arc(-20 * s, -30 * s, 12 * s, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(20 * s, -30 * s, 12 * s, 0, Math.PI * 2);
-    ctx.fill();
+    rect(bx + 3*s, by - s, 14*s, 4*s, C.hairM);
+    rect(bx + 3*s, by + 2*s, 2*s, 2*s, C.hairM);
 
-    // Бант
-    ctx.fillStyle = '#FF4081';
-    ctx.beginPath();
-    ctx.ellipse(28 * s, -40 * s, 10 * s, 6 * s, 0.3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(32 * s, -36 * s, 6 * s, 8 * s, -0.3, 0, Math.PI * 2);
-    ctx.fill();
+    // Голова
+    rect(bx + 4*s, by + 0*s, 12*s, 10*s, C.skin);
+    rect(bx + 4*s, by + 9*s, 12*s, 2*s, C.skinDark);
 
     // Глаза
-    const eyeY = -28 * s;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.ellipse(-12 * s, eyeY, 9 * s, 10 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(12 * s, eyeY, 9 * s, 10 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    let pupilState = 'normal';
-    if (game.momState === 'running') pupilState = 'squint';
-    if (game.momState === 'done') pupilState = 'happy';
-
-    ctx.fillStyle = '#2E7D32';
-    if (pupilState === 'normal') {
-      ctx.beginPath();
-      ctx.ellipse(-12 * s, eyeY, 5 * s, 7 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(12 * s, eyeY, 5 * s, 7 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.ellipse(-12 * s, eyeY, 2.5 * s, 6 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(12 * s, eyeY, 2.5 * s, 6 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(-10 * s, eyeY - 3 * s, 2 * s, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(14 * s, eyeY - 3 * s, 2 * s, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (pupilState === 'squint') {
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 2.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(-17 * s, eyeY);
-      ctx.lineTo(-7 * s, eyeY);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(7 * s, eyeY);
-      ctx.lineTo(17 * s, eyeY);
-      ctx.stroke();
-    } else if (pupilState === 'happy') {
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 2.5 * s;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.arc(-12 * s, eyeY + 2 * s, 6 * s, Math.PI, 0);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(12 * s, eyeY + 2 * s, 6 * s, Math.PI, 0);
-      ctx.stroke();
-    }
-
-    // Рот
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 1.5 * s;
-    ctx.lineCap = 'round';
-    if (game.momState === 'running') {
-      ctx.fillStyle = '#C2185B';
-      ctx.beginPath();
-      ctx.ellipse(0, -8 * s, 6 * s, 5 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (game.momState === 'done' || game.readyToWalk) {
-      ctx.beginPath();
-      ctx.arc(0, -8 * s, 6 * s, 0, Math.PI);
-      ctx.stroke();
+    if (state.hitAnim > 0) {
+      rect(bx + 6*s, by + 4*s, 2*s, s, C.black);
+      rect(bx + 7*s, by + 3*s, s, s, C.black);
+      rect(bx + 7*s, by + 5*s, s, s, C.black);
+      rect(bx + 12*s, by + 4*s, 2*s, s, C.black);
+      rect(bx + 13*s, by + 3*s, s, s, C.black);
+      rect(bx + 13*s, by + 5*s, s, s, C.black);
+      rect(bx + 8*s, by + 7*s, 4*s, 2*s, C.black);
+      rect(bx + 9*s, by + 8*s, 2*s, s, C.red);
     } else {
-      ctx.beginPath();
-      ctx.arc(-5 * s, -8 * s, 4 * s, 0, Math.PI);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(5 * s, -8 * s, 4 * s, 0, Math.PI);
-      ctx.stroke();
+      rect(bx + 6*s, by + 4*s, 2*s, 2*s, C.black);
+      rect(bx + 12*s, by + 4*s, 2*s, 2*s, C.black);
+      rect(bx + 6*s, by + 4*s, s, s, C.white);
+      rect(bx + 12*s, by + 4*s, s, s, C.white);
+      rect(bx + 8*s, by + 7*s, 4*s, s, C.black);
     }
 
-    // Щёчки
-    ctx.fillStyle = 'rgba(255, 105, 180, 0.4)';
+    // Шея
+    rect(bx + 8*s, by + 10*s, 4*s, 2*s, C.skin);
+
+    // Футболка
+    rect(bx + 3*s, by + 12*s, 14*s, 8*s, C.shirt);
+    rect(bx + 3*s, by + 19*s, 14*s, s, C.shirtDark);
+    rect(bx + 1*s, by + 12*s, 3*s, 3*s, C.shirt);
+    rect(bx + 16*s, by + 12*s, 3*s, 3*s, C.shirt);
+
+    // Руки
+    const armShake = state.hitAnim > 0 ? Math.sin(state.hitAnim * 0.5) * 2 : 0;
+    rect(bx + 1*s, by + 15*s + armShake, 3*s, 6*s, C.skin);
+    rect(bx + 16*s, by + 15*s - armShake, 3*s, 6*s, C.skin);
+
+    // Штаны
+    rect(bx + 4*s, by + 20*s, 5*s, 5*s, C.pants);
+    rect(bx + 11*s, by + 20*s, 5*s, 5*s, C.pants);
+    rect(bx + 4*s, by + 24*s, 5*s, s, C.pantsDark);
+    rect(bx + 11*s, by + 24*s, 5*s, s, C.pantsDark);
+
+    // Ботинки
+    rect(bx + 3*s, by + 25*s, 6*s, 2*s, C.black);
+    rect(bx + 11*s, by + 25*s, 6*s, 2*s, C.black);
+
+    // Синяк
+    if (state.hitAnim > 10) {
+      ctx.fillStyle = C.purple;
+      ctx.globalAlpha = state.hitAnim / 30;
+      ctx.beginPath();
+      ctx.ellipse(bx + 7*s, by + 2*s, 3*s, 2*s, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Звёздочки при ударе
+  function drawStars() {
+    state.stars.forEach(star => {
+      ctx.save();
+      ctx.translate(star.x, star.y);
+      ctx.rotate(star.rot);
+      ctx.fillStyle = star.color;
+      ctx.globalAlpha = star.life / star.maxLife;
+      const sz = star.size;
+      ctx.fillRect(-sz/2, -sz*1.5, sz, sz*3);
+      ctx.fillRect(-sz*1.5, -sz/2, sz*3, sz);
+      ctx.restore();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  // Фон
+  function drawBackground() {
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#0a0a2e');
+    grad.addColorStop(0.6, '#1a1a4e');
+    grad.addColorStop(1, '#2d1a4e');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Звёзды на небе
+    ctx.fillStyle = '#FFF';
+    for (let i = 0; i < 40; i++) {
+      const sx = (i * 137.5) % W;
+      const sy = (i * 73.3) % (H * 0.6);
+      const twinkle = Math.sin(state.t * 0.05 + i) * 0.5 + 0.5;
+      ctx.globalAlpha = twinkle;
+      ctx.fillRect(sx, sy, PIXEL, PIXEL);
+    }
+    ctx.globalAlpha = 1;
+
+    // Луна
+    const moonR = Math.max(20, H * 0.04);
+    ctx.fillStyle = '#FFF9C4';
     ctx.beginPath();
-    ctx.ellipse(-20 * s, -15 * s, 5 * s, 3 * s, 0, 0, Math.PI * 2);
+    ctx.arc(W * 0.85, H * 0.15, moonR, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = '#0a0a2e';
     ctx.beginPath();
-    ctx.ellipse(20 * s, -15 * s, 5 * s, 3 * s, 0, 0, Math.PI * 2);
+    ctx.arc(W * 0.85 + moonR * 0.3, H * 0.15 - moonR * 0.2, moonR * 0.85, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.restore();
+    // Земля
+    const groundY = H * 0.78 + 28 * PIXEL;
+    ctx.fillStyle = '#2d4a2b';
+    ctx.fillRect(0, groundY, W, H - groundY);
+    ctx.fillStyle = '#1a2e18';
+    ctx.fillRect(0, groundY, W, PIXEL * 2);
 
-    // Если мама бежит, рисуем следы
-    if (game.momState === 'running') {
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      for (let i = 0; i < 3; i++) {
-        const px = game.momX - 30 * s + i * 20 * s;
-        const py = game.momY + 50 * s + Math.sin(game.t * 0.3 + i) * 5 * s;
-        ctx.beginPath();
-        ctx.ellipse(px, py, 6 * s, 3 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
+    // Травинки
+    ctx.fillStyle = '#4CAF50';
+    for (let i = 0; i < W; i += PIXEL * 4) {
+      ctx.fillRect(i, groundY - PIXEL, PIXEL, PIXEL);
+      if (i % (PIXEL * 8) === 0) {
+        ctx.fillRect(i + PIXEL, groundY - PIXEL * 2, PIXEL, PIXEL);
       }
     }
   }
 
-  function drawKids() {
-    game.kids.forEach(kid => {
-      if (kid.collected) return;
-      ctx.save();
-      ctx.translate(kid.x, kid.y);
+  function update() {
+    state.t++;
 
-      // Тень
-      ctx.fillStyle = 'rgba(0,0,0,0.15)';
-      ctx.beginPath();
-      ctx.ellipse(0, 30 * (kid.r/35), 25 * (kid.r/35), 6 * (kid.r/35), 0, 0, Math.PI * 2);
-      ctx.fill();
+    if (state.phase === 'intro') {
+      const targetX = state.manX - 45 * PIXEL;
+      // Скорость зависит от размера экрана - всегда одинаковое время
+      const speed = Math.max(2, W / 200);
+      state.womanX += speed;
+      state.walkFrame = Math.floor(state.t / 8) % 2;
 
-      // Тело
-      ctx.fillStyle = kid.color;
-      ctx.beginPath();
-      ctx.arc(0, 0, kid.r, 0, Math.PI * 2);
-      ctx.fill();
+      if (state.womanX >= targetX) {
+        state.womanX = targetX;
+        state.phase = 'dialogue';
+        state.t = 0;
+      }
+    }
 
-      // Эмодзи
-      ctx.font = `${kid.r * 1.4}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(kid.emoji, 0, 2);
+    if (state.phase === 'dialogue') {
+      if (state.t === 30) womanBubbleEl.classList.add('show');
+      if (state.t === 120) manBubbleEl.classList.add('show');
+      if (state.t === 210) {
+        womanBubbleEl.classList.remove('show');
+        manBubbleEl.classList.remove('show');
+        state.phase = 'hitting';
+        state.t = 0;
+        counterEl.classList.add('show');
+        hintEl.classList.add('show');
+      }
+    }
 
-      // Имя
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${kid.r * 0.5}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.fillText(kid.name, 0, kid.r + 4);
-
-      // Блик
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.beginPath();
-      ctx.arc(-kid.r * 0.3, -kid.r * 0.3, kid.r * 0.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.restore();
-    });
-  }
-
-  function drawToys() {
-    game.toys.forEach(toy => {
-      if (toy.collected) return;
-      ctx.save();
-      ctx.translate(toy.x, toy.y);
-
-      // Тень
-      ctx.fillStyle = 'rgba(0,0,0,0.15)';
-      ctx.beginPath();
-      ctx.ellipse(0, 18 * (toy.r/22), 18 * (toy.r/22), 5 * (toy.r/22), 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Фон
-      ctx.fillStyle = toy.color;
-      ctx.beginPath();
-      ctx.arc(0, 0, toy.r, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Эмодзи
-      ctx.font = `${toy.r * 1.3}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(toy.emoji, 0, 2);
-
-      // Блик
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.beginPath();
-      ctx.arc(-toy.r * 0.25, -toy.r * 0.25, toy.r * 0.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.restore();
-    });
-  }
-
-  function drawParticles() {
-    game.particles.forEach(p => {
-      ctx.save();
-      ctx.globalAlpha = p.life / p.maxLife;
-      ctx.fillStyle = p.color;
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      if (p.type === 'star') {
-        ctx.fillRect(-p.size/2, -p.size*1.5, p.size, p.size*3);
-        ctx.fillRect(-p.size*1.5, -p.size/2, p.size*3, p.size);
+    if (state.phase === 'hitting') {
+      if (state.hitAnim > 0) {
+        state.hitAnim--;
+        if (state.hitAnim > 15) {
+          state.batAngle = -Math.PI / 2 - (state.hitAnim - 15) * 0.05;
+        } else {
+          state.batAngle = -Math.PI / 2 + (15 - state.hitAnim) * 0.15;
+        }
+        state.manShake = Math.sin(state.hitAnim * 0.8) * (state.hitAnim / 3);
       } else {
-        ctx.beginPath();
-        ctx.arc(0, 0, p.size, 0, Math.PI * 2);
-        ctx.fill();
+        state.batAngle = 0;
+        state.manShake = 0;
       }
-      ctx.restore();
+    }
+
+    state.stars = state.stars.filter(s => {
+      s.x += s.vx;
+      s.y += s.vy;
+      s.vy += 0.3;
+      s.rot += s.vr;
+      s.life--;
+      return s.life > 0;
     });
-  }
-
-  function drawFinalMessage() {
-    if (!game.finalMessage) return;
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(0, H/2 - 80, W, 100);
-
-    ctx.fillStyle = '#FFD700';
-    ctx.font = 'bold 32px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('👧 "Мама, я хочу писать!" 😂', W/2, H/2 - 20);
-
-    ctx.fillStyle = '#fff';
-    ctx.font = '18px sans-serif';
-    ctx.fillText('🔄 Нажми "Магазин" → "Сброс" чтобы начать заново', W/2, H/2 + 35);
-    ctx.restore();
   }
 
   function draw() {
-    ctx.clearRect(0, 0, W, H);
     drawBackground();
-    drawToys();
-    drawKids();
-    drawMom();
-    drawParticles();
-    drawFinalMessage();
-  }
+    drawMan(state.manX, state.manY, state.manShake, 0);
+    drawWoman(state.womanX, state.womanY, state.walkFrame, state.batAngle);
+    drawStars();
 
-  // ========== Логика ==========
-  function update() {
-    game.t++;
-
-    if (game.squish > 0) {
-      game.squish -= 0.08;
-      if (game.squish < 0) game.squish = 0;
-    }
-
-    // Движение мамы к целям
-    if (game.momState === 'running') {
-      const dx = game.targetX - game.momX;
-      const dy = game.targetY - game.momY;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-
-      if (dist > 5) {
-        const speed = 4 + game.runTimer * 0.1;
-        game.momX += (dx / dist) * Math.min(speed, dist);
-        game.momY += (dy / dist) * Math.min(speed, dist);
-        game.runTimer++;
-      } else {
-        // Достигли цели
-        game.momX = game.targetX;
-        game.momY = game.targetY;
-        collectTarget();
-      }
-    }
-
-    if (game.momState === 'cooldown') {
-      game.cooldownTimer--;
-      if (game.cooldownTimer <= 0) {
-        game.momState = 'idle';
-        // Проверяем, все ли собрано
-        const allKids = game.kids.every(k => k.collected);
-        const allToys = game.toys.every(t => t.collected);
-        if (allKids && allToys && !game.readyToWalk) {
-          game.readyToWalk = true;
-          game.momState = 'done';
-          setTimeout(() => {
-            game.finalMessage = true;
-          }, 1000);
-        }
-      }
-    }
-
-    // Авто-сбор (апгрейд)
-    if (upgrades[1].level > 0 && game.momState === 'idle' && !game.readyToWalk) {
-      game.autoTimer++;
-      const interval = Math.max(60, 180 - upgrades[1].level * 25);
-      if (game.autoTimer >= interval) {
-        findNextTarget();
-        game.autoTimer = 0;
-      }
-    }
-
-    // Частицы
-    game.particles = game.particles.filter(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.2;
-      p.rot += p.vr;
-      p.life--;
-      return p.life > 0;
-    });
-  }
-
-  function findNextTarget() {
-    // Ищем ближайший несобранный объект
-    const targets = [...game.kids.filter(k => !k.collected), ...game.toys.filter(t => !t.collected)];
-    if (targets.length === 0) return;
-
-    let closest = targets[0];
-    let minDist = Infinity;
-    targets.forEach(t => {
-      const dx = t.x - game.momX;
-      const dy = t.y - game.momY;
-      const dist = dx*dx + dy*dy;
-      if (dist < minDist) {
-        minDist = dist;
-        closest = t;
-      }
-    });
-
-    game.targetX = closest.x;
-    game.targetY = closest.y;
-    game.momState = 'running';
-    game.runTimer = 0;
-    game.squish = 0.5;
-  }
-
-  function collectTarget() {
-    // Проверяем, есть ли кто-то рядом
-    let collected = false;
-    game.kids.forEach(kid => {
-      if (kid.collected) return;
-      const dx = kid.x - game.momX;
-      const dy = kid.y - game.momY;
-      if (dx*dx + dy*dy < 2500) {
-        kid.collected = true;
-        collected = true;
-        const earned = 5 * (upgrades[0].effect());
-        game.coins += earned;
-        spawnFloatingCoin(game.momX, game.momY - 40, earned);
-        spawnParticles(game.momX, game.momY, '#FF6B9D', 12);
-        updateCoinsDisplay();
-      }
-    });
-
-    game.toys.forEach(toy => {
-      if (toy.collected) return;
-      const dx = toy.x - game.momX;
-      const dy = toy.y - game.momY;
-      if (dx*dx + dy*dy < 1600) {
-        toy.collected = true;
-        collected = true;
-        const earned = 3 * (upgrades[0].effect());
-        game.coins += earned;
-        spawnFloatingCoin(game.momX, game.momY - 40, earned);
-        spawnParticles(game.momX, game.momY, toy.color, 8);
-        updateCoinsDisplay();
-      }
-    });
-
-    if (collected) {
-      game.momState = 'cooldown';
-      game.cooldownTimer = 15;
-      game.squish = 0.8;
-    } else {
-      // Если ничего не собрали, возвращаемся в idle
-      game.momState = 'idle';
+    if (state.flashAlpha > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${state.flashAlpha})`;
+      ctx.fillRect(0, 0, W, H);
+      state.flashAlpha -= 0.05;
     }
   }
 
-  function startCollect() {
-    if (game.momState === 'idle' && !game.readyToWalk) {
-      findNextTarget();
-    }
-  }
-
-  function spawnParticles(x, y, color, count) {
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 2 + Math.random() * 4;
-      game.particles.push({
-        x: x,
-        y: y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 2,
-        rot: Math.random() * Math.PI,
-        vr: (Math.random() - 0.5) * 0.3,
-        size: 3 + Math.random() * 5,
-        color: color,
-        life: 30 + Math.random() * 20,
-        maxLife: 50,
-        type: Math.random() > 0.5 ? 'star' : 'circle'
-      });
-    }
-  }
-
-  function spawnFloatingCoin(x, y, amount) {
-    const el = document.createElement('div');
-    el.className = 'floating-coin';
-    el.textContent = `+${amount}`;
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1200);
-  }
-
-  function updateCoinsDisplay() {
-    coinsAmountEl.textContent = formatNumber(game.coins);
-  }
-
-  function formatNumber(n) {
-    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-    return n.toString();
-  }
-
-  // ========== Апгрейды ==========
-  const upgrades = [
-    {
-      id: 'multiplier',
-      name: 'Множитель 💰',
-      desc: 'Больше монет за сбор',
-      icon: '💰',
-      level: 0,
-      maxLevel: 10,
-      baseCost: 10,
-      costMult: 1.8,
-      effect: () => 1 + upgrades[0].level
-    },
-    {
-      id: 'auto',
-      name: 'Авто-сбор ⚡',
-      desc: 'Мама сама собирает',
-      icon: '⚡',
-      level: 0,
-      maxLevel: 5,
-      baseCost: 30,
-      costMult: 2.2,
-      effect: () => upgrades[1].level
-    },
-    {
-      id: 'speed',
-      name: 'Скорость 🏃',
-      desc: 'Мама бегает быстрее',
-      icon: '🏃',
-      level: 0,
-      maxLevel: 5,
-      baseCost: 25,
-      costMult: 2.0,
-      effect: () => upgrades[2].level * 0.5
-    }
-  ];
-
-  function getCost(upg) {
-    return Math.floor(upg.baseCost * Math.pow(upg.costMult, upg.level));
-  }
-
-  function renderShop() {
-    upgradesList.innerHTML = '';
-    upgrades.forEach((upg, idx) => {
-      const cost = getCost(upg);
-      const maxed = upg.level >= upg.maxLevel;
-      const canBuy = game.coins >= cost && !maxed;
-
-      const card = document.createElement('div');
-      card.className = 'upgrade-card';
-
-      let effectText = '';
-      if (idx === 0) effectText = `Множитель: x${upg.effect()}`;
-      else if (idx === 1) effectText = upg.level === 0 ? 'Выкл' : `Каждые ${((180 - upg.level * 25) / 60).toFixed(1)}с`;
-      else if (idx === 2) effectText = `Скорость: +${(upg.effect() * 2).toFixed(0)}%`;
-
-      card.innerHTML = `
-        <div class="upgrade-icon">${upg.icon}</div>
-        <div class="upgrade-info">
-          <div class="upgrade-name">${upg.name}</div>
-          <div class="upgrade-desc">${upg.desc}</div>
-          <div class="upgrade-level">Ур. ${upg.level}/${upg.maxLevel} • ${effectText}</div>
-        </div>
-        <button class="upgrade-buy" ${!canBuy ? 'disabled' : ''} data-idx="${idx}">
-          ${maxed ? 'MAX' : '💰 ' + formatNumber(cost)}
-        </button>
-      `;
-      upgradesList.appendChild(card);
-    });
-
-    // Кнопка сброса
-    const resetBtn = document.createElement('button');
-    resetBtn.className = 'close-btn';
-    resetBtn.textContent = '🔄 Сбросить игру';
-    resetBtn.style.marginTop = '12px';
-    resetBtn.style.background = 'linear-gradient(135deg, #FF6B6B, #D32F2F)';
-    resetBtn.style.boxShadow = '0 4px 0 #B71C1C';
-    resetBtn.addEventListener('click', () => {
-      if (confirm('Сбросить прогресс? Все монеты сохранятся.')) {
-        initGame();
-        renderShop();
-        updateCoinsDisplay();
-      }
-    });
-    upgradesList.appendChild(resetBtn);
-
-    upgradesList.querySelectorAll('.upgrade-buy').forEach(btn => {
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const idx = parseInt(this.dataset.idx);
-        buyUpgrade(idx);
-      });
-    });
-  }
-
-  function buyUpgrade(idx) {
-    const upg = upgrades[idx];
-    const cost = getCost(upg);
-    if (game.coins >= cost && upg.level < upg.maxLevel) {
-      game.coins -= cost;
-      upg.level++;
-      updateCoinsDisplay();
-      renderShop();
-    }
-  }
-
-  // ========== Обработка тапов ==========
-  function handleTap(clientX, clientY) {
-    const rect = canvas.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-
-    const s = Math.min(W, H) / 180;
-    const dx = x - game.momX;
-    const dy = y - game.momY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist < 60 * s && !game.readyToWalk) {
-      startCollect();
-      if (game.hintVisible) {
-        hintEl.style.display = 'none';
-        game.hintVisible = false;
-      }
-    }
-  }
-
-  canvas.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      const t = e.changedTouches[i];
-      handleTap(t.clientX, t.clientY);
-    }
-  }, { passive: false });
-
-  canvas.addEventListener('mousedown', function(e) {
-    handleTap(e.clientX, e.clientY);
-  });
-
-  // ========== Магазин ==========
-  shopBtn.addEventListener('click', () => {
-    renderShop();
-    shopModal.classList.add('show');
-  });
-
-  closeShop.addEventListener('click', () => {
-    shopModal.classList.remove('show');
-  });
-
-  shopModal.addEventListener('click', (e) => {
-    if (e.target === shopModal) {
-      shopModal.classList.remove('show');
-    }
-  });
-
-  document.addEventListener('touchmove', (e) => {
-    if (e.target === canvas) e.preventDefault();
-  }, { passive: false });
-
-  document.addEventListener('gesturestart', (e) => e.preventDefault());
-
-  // ========== Запуск ==========
   function loop() {
     update();
     draw();
     requestAnimationFrame(loop);
   }
 
+  function handleHit(clientX, clientY) {
+    if (state.phase !== 'hitting') return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+
+    const s = PIXEL;
+    const manLeft = state.manX - 5 * s;
+    const manRight = state.manX + 22 * s;
+    const manTop = state.manY - 5 * s;
+    const manBottom = state.manY + 28 * s;
+
+    if (x >= manLeft && x <= manRight && y >= manTop && y <= manBottom) {
+      state.hits++;
+      state.hitAnim = 30;
+      counterEl.textContent = `${state.hits} / ${state.maxHits}`;
+      hintEl.classList.remove('show');
+
+      const hitX = state.manX + 10 * s;
+      const hitY = state.manY + 3 * s;
+      const colors = ['#FFD700', '#FF5722', '#FFEB3B', '#FF9800', '#FFF'];
+      for (let i = 0; i < 8; i++) {
+        const angle = (Math.PI * 2 * i) / 8 + Math.random() * 0.5;
+        const speed = 4 + Math.random() * 4;
+        state.stars.push({
+          x: hitX,
+          y: hitY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 2,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.3,
+          size: s * (1 + Math.random()),
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 30,
+          maxLife: 30
+        });
+      }
+
+      if (state.hits >= state.maxHits) {
+        finishGame();
+      }
+    }
+  }
+
+  function finishGame() {
+    state.phase = 'finished';
+    state.finished = true;
+    state.flashAlpha = 1;
+    counterEl.classList.remove('show');
+    hintEl.classList.remove('show');
+
+    flashEl.classList.add('active');
+    setTimeout(() => flashEl.classList.remove('active'), 150);
+
+    setTimeout(() => finalTextEl.classList.add('show'), 400);
+    setTimeout(() => restartBtn.classList.add('show'), 1200);
+  }
+
+  function resetGame() {
+    state.phase = 'intro';
+    state.t = 0;
+    state.hits = 0;
+    state.hitAnim = 0;
+    state.manShake = 0;
+    state.batAngle = 0;
+    state.stars = [];
+    state.flashAlpha = 0;
+    state.finished = false;
+    state.walkFrame = 0;
+
+    recalcPositions();
+    state.womanX = -W * 0.15;
+
+    counterEl.classList.remove('show');
+    counterEl.textContent = '0 / 15';
+    hintEl.classList.remove('show');
+    finalTextEl.classList.remove('show');
+    restartBtn.classList.remove('show');
+    womanBubbleEl.classList.remove('show');
+    manBubbleEl.classList.remove('show');
+    flashEl.classList.remove('active');
+  }
+
+  // События
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      handleHit(t.clientX, t.clientY);
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('mousedown', function(e) {
+    handleHit(e.clientX, e.clientY);
+  });
+
+  canvas.addEventListener('click', function(e) {
+    e.preventDefault();
+  });
+
+  restartBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    resetGame();
+  });
+
+  restartBtn.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    resetGame();
+  }, { passive: false });
+
+  document.addEventListener('touchmove', function(e) {
+    if (e.target === canvas) e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('gesturestart', function(e) {
+    e.preventDefault();
+  });
+
+  // Инициализация
   resize();
-  initGame();
-  updateCoinsDisplay();
+  recalcPositions();
+  state.womanX = -W * 0.15;
   loop();
 
-  setTimeout(() => resize(), 100);
+  // Повторный вызов resize после полной загрузки для корректных размеров
+  window.addEventListener('load', function() {
+    resize();
+  });
 })();
 </script>
 </body>
