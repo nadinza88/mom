@@ -40,7 +40,6 @@
     background: #0a0a1a;
   }
 
-  /* Облачка с текстом - через DOM для читаемости */
   .bubble {
     position: absolute;
     background: #fff;
@@ -84,21 +83,11 @@
     z-index: 1;
   }
 
-  .bubble.show {
-    opacity: 1;
-  }
+  .bubble.show { opacity: 1; }
 
-  #womanBubble {
-    top: 15%;
-    left: 10%;
-  }
+  #womanBubble { top: 15%; left: 10%; }
+  #manBubble { top: 15%; right: 10%; }
 
-  #manBubble {
-    top: 15%;
-    right: 10%;
-  }
-
-  /* Счётчик */
   .counter {
     position: fixed;
     top: 15px;
@@ -110,16 +99,13 @@
     font-family: 'Courier New', monospace;
     z-index: 30;
     display: none;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.6);
     padding: 8px 16px;
     border: 3px solid #FFD700;
   }
 
-  .counter.show {
-    display: block;
-  }
+  .counter.show { display: block; }
 
-  /* Финальная надпись */
   .final-text {
     position: fixed;
     top: 30%;
@@ -137,11 +123,8 @@
     white-space: nowrap;
   }
 
-  .final-text.show {
-    transform: translate(-50%, -50%) scale(1);
-  }
+  .final-text.show { transform: translate(-50%, -50%) scale(1); }
 
-  /* Кнопка повтора */
   .restart-btn {
     position: fixed;
     bottom: -120px;
@@ -162,16 +145,13 @@
     letter-spacing: 2px;
   }
 
-  .restart-btn.show {
-    bottom: 40px;
-  }
+  .restart-btn.show { bottom: 40px; }
 
   .restart-btn:active {
     transform: translateX(-50%) translateY(4px);
     box-shadow: 0 2px 0 #000;
   }
 
-  /* Подсказка */
   .hint {
     position: fixed;
     bottom: 20px;
@@ -186,19 +166,18 @@
     transition: opacity 0.5s;
     text-align: center;
     pointer-events: none;
-    animation: blink 1s infinite;
+    background: rgba(0,0,0,0.6);
+    padding: 8px 16px;
+    border: 2px solid #FFD700;
   }
 
-  .hint.show {
-    opacity: 1;
-  }
+  .hint.show { opacity: 1; animation: blink 1s infinite; }
 
   @keyframes blink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
   }
 
-  /* Вспышка */
   .flash {
     position: fixed;
     inset: 0;
@@ -209,31 +188,14 @@
     transition: opacity 0.1s;
   }
 
-  .flash.active {
-    opacity: 1;
-  }
+  .flash.active { opacity: 1; }
 
   @media (max-width: 600px) {
-    .bubble {
-      font-size: 14px;
-      padding: 8px 12px;
-    }
-    .counter {
-      font-size: 20px;
-      top: 10px;
-      right: 10px;
-      padding: 6px 12px;
-    }
-    .final-text {
-      font-size: 28px;
-    }
-    .restart-btn {
-      font-size: 18px;
-      padding: 14px 30px;
-    }
-    .hint {
-      font-size: 14px;
-    }
+    .bubble { font-size: 14px; padding: 8px 12px; }
+    .counter { font-size: 20px; padding: 6px 12px; }
+    .final-text { font-size: 28px; }
+    .restart-btn { font-size: 18px; padding: 14px 30px; }
+    .hint { font-size: 14px; }
   }
 </style>
 </head>
@@ -256,7 +218,6 @@
 
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
-  const wrapper = document.getElementById('gameWrapper');
   const womanBubbleEl = document.getElementById('womanBubble');
   const manBubbleEl = document.getElementById('manBubble');
   const counterEl = document.getElementById('counter');
@@ -265,9 +226,8 @@
   const flashEl = document.getElementById('flash');
   const restartBtn = document.getElementById('restartBtn');
 
-  // Размеры canvas
   let W = 0, H = 0;
-  const PIXEL = 3; // размер "пикселя"
+  let PIXEL = 4; // адаптивный размер "пикселя"
 
   function resize() {
     const dpr = window.devicePixelRatio || 1;
@@ -292,12 +252,17 @@
     W = canvas.width;
     H = canvas.height;
 
-    ctx.imageSmoothingEnabled = false;
-  }
+    // Адаптивный размер пикселя - чтобы персонажи были хорошо видны
+    // Персонаж ~30 пикселей высотой, должен занимать ~35% высоты экрана
+    PIXEL = Math.max(3, Math.floor(H / 85));
 
-  resize();
-  window.addEventListener('resize', resize);
-  window.addEventListener('orientationchange', () => setTimeout(resize, 100));
+    ctx.imageSmoothingEnabled = false;
+
+    // Пересчитываем позиции при ресайзе
+    if (state) {
+      recalcPositions();
+    }
+  }
 
   // Цвета
   const C = {
@@ -313,18 +278,13 @@
     pantsDark: '#212121',
     bat: '#6D4C41',
     batDark: '#4E342E',
-    eye: '#000',
-    white: '#FFF',
     black: '#000',
+    white: '#FFF',
     yellow: '#FFD700',
     red: '#F44336',
-    bg1: '#0a0a2e',
-    bg2: '#1a1a4e',
-    ground: '#2d4a2b',
-    groundDark: '#1a2e18'
+    purple: '#9C27B0'
   };
 
-  // Состояние
   const state = {
     phase: 'intro',
     t: 0,
@@ -338,28 +298,35 @@
     hitAnim: 0,
     manShake: 0,
     batAngle: 0,
-    batSwing: 0,
     stars: [],
     flashAlpha: 0,
     finished: false
   };
 
-  // Позиции персонажей (в координатах canvas)
-  function initPositions() {
+  // Пересчёт позиций при изменении размера
+  function recalcPositions() {
     const groundY = H * 0.78;
     state.womanY = groundY;
     state.manY = groundY;
     state.manX = W * 0.72;
-    state.womanX = -W * 0.15;
+
+    // Если женщина ещё не дошла до мужчины (фаза intro) - пересчитать её позицию
+    if (state.phase === 'intro') {
+      // Оставляем womanX как есть, но ограничиваем, чтобы не была слишком далеко
+      const targetX = state.manX - 45 * PIXEL;
+      if (state.womanX < -W * 0.3) {
+        state.womanX = -W * 0.15;
+      }
+      // Если уже дошла - фиксируем у цели
+      if (state.womanX >= targetX - 5) {
+        state.womanX = targetX;
+      }
+    } else {
+      // В других фазах - женщина уже у мужчины
+      state.womanX = state.manX - 45 * PIXEL;
+    }
   }
 
-  // Рисование пикселя (блока)
-  function px(x, y, color, size = PIXEL) {
-    ctx.fillStyle = color;
-    ctx.fillRect(Math.floor(x), Math.floor(y), size, size);
-  }
-
-  // Рисование прямоугольника из пикселей
   function rect(x, y, w, h, color) {
     ctx.fillStyle = color;
     ctx.fillRect(Math.floor(x), Math.floor(y), w, h);
@@ -374,26 +341,25 @@
     // Тень
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
-    ctx.ellipse(bx + 10*s, by + 24*s, 12*s, 2*s, 0, 0, Math.PI*2);
+    ctx.ellipse(bx + 10*s, by + 28*s, 12*s, 2*s, 0, 0, Math.PI*2);
     ctx.fill();
 
     // Волосы (до плеч)
     rect(bx + 3*s, by - 2*s, 14*s, 8*s, C.hairW);
-    rect(bx + 2*s, by + 4*s, 3*s, 8*s, C.hairW); // левая прядь
-    rect(bx + 15*s, by + 4*s, 3*s, 8*s, C.hairW); // правая прядь
+    rect(bx + 2*s, by + 4*s, 3*s, 8*s, C.hairW);
+    rect(bx + 15*s, by + 4*s, 3*s, 8*s, C.hairW);
 
     // Голова
     rect(bx + 4*s, by + 0*s, 12*s, 10*s, C.skin);
-    rect(bx + 4*s, by + 9*s, 12*s, 2*s, C.skinDark); // тень под подбородком
+    rect(bx + 4*s, by + 9*s, 12*s, 2*s, C.skinDark);
 
     // Глаза
     rect(bx + 6*s, by + 4*s, 2*s, 2*s, C.black);
     rect(bx + 12*s, by + 4*s, 2*s, 2*s, C.black);
-    // Блики
     rect(bx + 6*s, by + 4*s, s, s, C.white);
     rect(bx + 12*s, by + 4*s, s, s, C.white);
 
-    // Рот (злой)
+    // Рот (злой в фазе ударов)
     if (state.phase === 'hitting' || state.phase === 'finished') {
       rect(bx + 8*s, by + 7*s, 4*s, s, C.red);
       rect(bx + 8*s, by + 8*s, 4*s, s, C.black);
@@ -404,17 +370,15 @@
     // Шея
     rect(bx + 8*s, by + 10*s, 4*s, 2*s, C.skin);
 
-    // Платье (тело)
+    // Платье
     rect(bx + 4*s, by + 12*s, 12*s, 8*s, C.dress);
     rect(bx + 4*s, by + 19*s, 12*s, s, C.dressDark);
-    // Пояс
     rect(bx + 4*s, by + 16*s, 12*s, s, C.yellow);
 
     // Юбка
     rect(bx + 3*s, by + 20*s, 14*s, 4*s, C.dress);
 
-    // Левая рука (статичная)
-    const legOff = walkFrame % 2 === 0 ? 0 : 1;
+    // Левая рука
     rect(bx + 1*s, by + 12*s, 3*s, 8*s, C.skin);
     rect(bx + 1*s, by + 19*s, 3*s, 2*s, C.skinDark);
 
@@ -422,18 +386,16 @@
     ctx.save();
     ctx.translate(bx + 16*s, by + 13*s);
     ctx.rotate(batAngle);
-    // Рука
     rect(0, 0, 3*s, 8*s, C.skin);
-    // Дубинка
-    rect(-s, -12*s, 5*s, 14*s, C.bat);
-    rect(-s, -12*s, 5*s, 2*s, C.batDark);
+    rect(-s, -14*s, 5*s, 16*s, C.bat);
+    rect(-s, -14*s, 5*s, 2*s, C.batDark);
     rect(-s, 0, 5*s, 2*s, C.batDark);
     ctx.restore();
 
     // Ноги
+    const legOff = walkFrame % 2 === 0 ? 0 : 1;
     rect(bx + 5*s, by + 24*s, 3*s, 4*s - legOff*s, C.skin);
     rect(bx + 12*s, by + 24*s, 3*s, 4*s - (1-legOff)*s, C.skin);
-    // Ботинки
     rect(bx + 4*s, by + 27*s - legOff*s, 5*s, 2*s, C.black);
     rect(bx + 11*s, by + 27*s - (1-legOff)*s, 5*s, 2*s, C.black);
   }
@@ -447,7 +409,7 @@
     // Тень
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
-    ctx.ellipse(bx + 10*s, by + 24*s, 12*s, 2*s, 0, 0, Math.PI*2);
+    ctx.ellipse(bx + 10*s, by + 28*s, 12*s, 2*s, 0, 0, Math.PI*2);
     ctx.fill();
 
     // Волосы
@@ -458,25 +420,21 @@
     rect(bx + 4*s, by + 0*s, 12*s, 10*s, C.skin);
     rect(bx + 4*s, by + 9*s, 12*s, 2*s, C.skinDark);
 
-    // Глаза (испуганные/боль)
+    // Глаза
     if (state.hitAnim > 0) {
-      // Закрытые глаза (крестики)
       rect(bx + 6*s, by + 4*s, 2*s, s, C.black);
       rect(bx + 7*s, by + 3*s, s, s, C.black);
       rect(bx + 7*s, by + 5*s, s, s, C.black);
       rect(bx + 12*s, by + 4*s, 2*s, s, C.black);
       rect(bx + 13*s, by + 3*s, s, s, C.black);
       rect(bx + 13*s, by + 5*s, s, s, C.black);
-      // Рот открытый (крик)
       rect(bx + 8*s, by + 7*s, 4*s, 2*s, C.black);
       rect(bx + 9*s, by + 8*s, 2*s, s, C.red);
     } else {
-      // Обычные глаза
       rect(bx + 6*s, by + 4*s, 2*s, 2*s, C.black);
       rect(bx + 12*s, by + 4*s, 2*s, 2*s, C.black);
       rect(bx + 6*s, by + 4*s, s, s, C.white);
       rect(bx + 12*s, by + 4*s, s, s, C.white);
-      // Рот недовольный
       rect(bx + 8*s, by + 7*s, 4*s, s, C.black);
     }
 
@@ -486,7 +444,6 @@
     // Футболка
     rect(bx + 3*s, by + 12*s, 14*s, 8*s, C.shirt);
     rect(bx + 3*s, by + 19*s, 14*s, s, C.shirtDark);
-    // Рукава
     rect(bx + 1*s, by + 12*s, 3*s, 3*s, C.shirt);
     rect(bx + 16*s, by + 12*s, 3*s, 3*s, C.shirt);
 
@@ -505,9 +462,9 @@
     rect(bx + 3*s, by + 25*s, 6*s, 2*s, C.black);
     rect(bx + 11*s, by + 25*s, 6*s, 2*s, C.black);
 
-    // Синяк при ударе
+    // Синяк
     if (state.hitAnim > 10) {
-      ctx.fillStyle = '#9C27B0';
+      ctx.fillStyle = C.purple;
       ctx.globalAlpha = state.hitAnim / 30;
       ctx.beginPath();
       ctx.ellipse(bx + 7*s, by + 2*s, 3*s, 2*s, 0, 0, Math.PI*2);
@@ -524,7 +481,6 @@
       ctx.rotate(star.rot);
       ctx.fillStyle = star.color;
       ctx.globalAlpha = star.life / star.maxLife;
-      // Звезда из 4 лучей
       const sz = star.size;
       ctx.fillRect(-sz/2, -sz*1.5, sz, sz*3);
       ctx.fillRect(-sz*1.5, -sz/2, sz*3, sz);
@@ -535,7 +491,6 @@
 
   // Фон
   function drawBackground() {
-    // Градиент неба
     const grad = ctx.createLinearGradient(0, 0, 0, H);
     grad.addColorStop(0, '#0a0a2e');
     grad.addColorStop(0.6, '#1a1a4e');
@@ -545,7 +500,7 @@
 
     // Звёзды на небе
     ctx.fillStyle = '#FFF';
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 40; i++) {
       const sx = (i * 137.5) % W;
       const sy = (i * 73.3) % (H * 0.6);
       const twinkle = Math.sin(state.t * 0.05 + i) * 0.5 + 0.5;
@@ -555,20 +510,21 @@
     ctx.globalAlpha = 1;
 
     // Луна
+    const moonR = Math.max(20, H * 0.04);
     ctx.fillStyle = '#FFF9C4';
     ctx.beginPath();
-    ctx.arc(W * 0.85, H * 0.15, 30, 0, Math.PI * 2);
+    ctx.arc(W * 0.85, H * 0.15, moonR, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#0a0a2e';
     ctx.beginPath();
-    ctx.arc(W * 0.85 + 10, H * 0.15 - 5, 25, 0, Math.PI * 2);
+    ctx.arc(W * 0.85 + moonR * 0.3, H * 0.15 - moonR * 0.2, moonR * 0.85, 0, Math.PI * 2);
     ctx.fill();
 
     // Земля
-    const groundY = H * 0.78 + 24 * PIXEL;
-    ctx.fillStyle = C.ground;
+    const groundY = H * 0.78 + 28 * PIXEL;
+    ctx.fillStyle = '#2d4a2b';
     ctx.fillRect(0, groundY, W, H - groundY);
-    ctx.fillStyle = C.groundDark;
+    ctx.fillStyle = '#1a2e18';
     ctx.fillRect(0, groundY, W, PIXEL * 2);
 
     // Травинки
@@ -581,14 +537,14 @@
     }
   }
 
-  // Обновление
   function update() {
     state.t++;
 
     if (state.phase === 'intro') {
-      // Женщина идёт к мужчине
       const targetX = state.manX - 45 * PIXEL;
-      state.womanX += (W / 240);
+      // Скорость зависит от размера экрана - всегда одинаковое время
+      const speed = Math.max(2, W / 200);
+      state.womanX += speed;
       state.walkFrame = Math.floor(state.t / 8) % 2;
 
       if (state.womanX >= targetX) {
@@ -599,12 +555,8 @@
     }
 
     if (state.phase === 'dialogue') {
-      if (state.t === 30) {
-        womanBubbleEl.classList.add('show');
-      }
-      if (state.t === 120) {
-        manBubbleEl.classList.add('show');
-      }
+      if (state.t === 30) womanBubbleEl.classList.add('show');
+      if (state.t === 120) manBubbleEl.classList.add('show');
       if (state.t === 210) {
         womanBubbleEl.classList.remove('show');
         manBubbleEl.classList.remove('show');
@@ -616,16 +568,13 @@
     }
 
     if (state.phase === 'hitting') {
-      // Анимация удара
       if (state.hitAnim > 0) {
         state.hitAnim--;
-        // Замах и удар дубинки
         if (state.hitAnim > 15) {
           state.batAngle = -Math.PI / 2 - (state.hitAnim - 15) * 0.05;
         } else {
           state.batAngle = -Math.PI / 2 + (15 - state.hitAnim) * 0.15;
         }
-        // Тряска мужчины
         state.manShake = Math.sin(state.hitAnim * 0.8) * (state.hitAnim / 3);
       } else {
         state.batAngle = 0;
@@ -633,7 +582,6 @@
       }
     }
 
-    // Звёзды
     state.stars = state.stars.filter(s => {
       s.x += s.vx;
       s.y += s.vy;
@@ -644,18 +592,12 @@
     });
   }
 
-  // Отрисовка
   function draw() {
     drawBackground();
-
-    // Персонажи
     drawMan(state.manX, state.manY, state.manShake, 0);
     drawWoman(state.womanX, state.womanY, state.walkFrame, state.batAngle);
-
-    // Звёзды
     drawStars();
 
-    // Вспышка
     if (state.flashAlpha > 0) {
       ctx.fillStyle = `rgba(255,255,255,${state.flashAlpha})`;
       ctx.fillRect(0, 0, W, H);
@@ -663,14 +605,12 @@
     }
   }
 
-  // Игровой цикл
   function loop() {
     update();
     draw();
     requestAnimationFrame(loop);
   }
 
-  // Обработка ударов
   function handleHit(clientX, clientY) {
     if (state.phase !== 'hitting') return;
 
@@ -680,11 +620,11 @@
     const x = (clientX - rect.left) * scaleX;
     const y = (clientY - rect.top) * scaleY;
 
-    // Область мужчины (с запасом)
-    const manLeft = state.manX - 10 * PIXEL;
-    const manRight = state.manX + 25 * PIXEL;
-    const manTop = state.manY - 5 * PIXEL;
-    const manBottom = state.manY + 28 * PIXEL;
+    const s = PIXEL;
+    const manLeft = state.manX - 5 * s;
+    const manRight = state.manX + 22 * s;
+    const manTop = state.manY - 5 * s;
+    const manBottom = state.manY + 28 * s;
 
     if (x >= manLeft && x <= manRight && y >= manTop && y <= manBottom) {
       state.hits++;
@@ -692,9 +632,8 @@
       counterEl.textContent = `${state.hits} / ${state.maxHits}`;
       hintEl.classList.remove('show');
 
-      // Звёзды от удара
-      const hitX = state.manX + 10 * PIXEL;
-      const hitY = state.manY + 3 * PIXEL;
+      const hitX = state.manX + 10 * s;
+      const hitY = state.manY + 3 * s;
       const colors = ['#FFD700', '#FF5722', '#FFEB3B', '#FF9800', '#FFF'];
       for (let i = 0; i < 8; i++) {
         const angle = (Math.PI * 2 * i) / 8 + Math.random() * 0.5;
@@ -706,14 +645,13 @@
           vy: Math.sin(angle) * speed - 2,
           rot: Math.random() * Math.PI,
           vr: (Math.random() - 0.5) * 0.3,
-          size: PIXEL * (1 + Math.random()),
+          size: s * (1 + Math.random()),
           color: colors[Math.floor(Math.random() * colors.length)],
           life: 30,
           maxLife: 30
         });
       }
 
-      // Проверка завершения
       if (state.hits >= state.maxHits) {
         finishGame();
       }
@@ -727,19 +665,11 @@
     counterEl.classList.remove('show');
     hintEl.classList.remove('show');
 
-    // Вспышка через DOM
     flashEl.classList.add('active');
     setTimeout(() => flashEl.classList.remove('active'), 150);
 
-    // Финальная надпись
-    setTimeout(() => {
-      finalTextEl.classList.add('show');
-    }, 400);
-
-    // Кнопка
-    setTimeout(() => {
-      restartBtn.classList.add('show');
-    }, 1200);
+    setTimeout(() => finalTextEl.classList.add('show'), 400);
+    setTimeout(() => restartBtn.classList.add('show'), 1200);
   }
 
   function resetGame() {
@@ -754,7 +684,8 @@
     state.finished = false;
     state.walkFrame = 0;
 
-    initPositions();
+    recalcPositions();
+    state.womanX = -W * 0.15;
 
     counterEl.classList.remove('show');
     counterEl.textContent = '0 / 15';
@@ -766,7 +697,7 @@
     flashEl.classList.remove('active');
   }
 
-  // События - правильная обработка touch и mouse
+  // События
   canvas.addEventListener('touchstart', function(e) {
     e.preventDefault();
     for (let i = 0; i < e.changedTouches.length; i++) {
@@ -779,7 +710,6 @@
     handleHit(e.clientX, e.clientY);
   });
 
-  // Предотвращение двойного срабатывания
   canvas.addEventListener('click', function(e) {
     e.preventDefault();
   });
@@ -796,7 +726,6 @@
     resetGame();
   }, { passive: false });
 
-  // Предотвращение скролла и зума
   document.addEventListener('touchmove', function(e) {
     if (e.target === canvas) e.preventDefault();
   }, { passive: false });
@@ -805,9 +734,16 @@
     e.preventDefault();
   });
 
-  // Запуск
-  initPositions();
+  // Инициализация
+  resize();
+  recalcPositions();
+  state.womanX = -W * 0.15;
   loop();
+
+  // Повторный вызов resize после полной загрузки для корректных размеров
+  window.addEventListener('load', function() {
+    resize();
+  });
 })();
 </script>
 </body>
